@@ -184,40 +184,184 @@ def plot_predictions(actuals, predictions, n_show=500, save_path=None,
     plt.show()
 
 
-def plot_prediction_scatter(actuals, predictions, save_path=None, 
-                           title="Scatter Plot: Predições vs Valores Reais"):
+def plot_qq_analysis(actuals, predictions, save_path=None, 
+                    title="QQ-Plot: Quantis Predições vs Valores Reais"):
     """
-    Cria scatter plot das predições vs valores reais
+    Cria QQ-Plot (Quantile-Quantile) para comparar distribuições das predições vs valores reais
+    
+    Args:
+        actuals: Valores reais
+        predictions: Predições do modelo
+        save_path: Caminho para salvar o gráfico
+        title: Título do gráfico
     """
-    plt.figure(figsize=(10, 8))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
     
-    # Scatter plot
-    plt.scatter(actuals, predictions, alpha=0.6, s=20)
+    # Garantir que são arrays numpy e achatar
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
     
-    # Linha perfeita (y=x)
-    min_val = min(min(actuals), min(predictions))
-    max_val = max(max(actuals), max(predictions))
-    plt.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='Linha Perfeita')
+    # ===== SUBPLOT 1: QQ-Plot Principal =====
+    ax1.set_title(title, fontsize=14, fontweight='bold')
     
-    plt.title(title)
-    plt.xlabel('Valores Reais')
-    plt.ylabel('Predições')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    # Ordenar os dados para calcular quantis
+    actuals_sorted = np.sort(actuals)
+    predictions_sorted = np.sort(predictions)
     
-    # Adicionar R²
-    from sklearn.metrics import r2_score
+    # Se os tamanhos forem diferentes, interpolar para igualar
+    if len(actuals_sorted) != len(predictions_sorted):
+        # Usar o menor tamanho como referência
+        min_size = min(len(actuals_sorted), len(predictions_sorted))
+        
+        # Criar quantis uniformes
+        quantiles = np.linspace(0, 1, min_size)
+        
+        # Interpolar para obter quantis correspondentes
+        actuals_quantiles = np.quantile(actuals_sorted, quantiles)
+        predictions_quantiles = np.quantile(predictions_sorted, quantiles)
+    else:
+        # Se têm o mesmo tamanho, usar diretamente
+        actuals_quantiles = actuals_sorted
+        predictions_quantiles = predictions_sorted
+    
+    # Plotar QQ-plot
+    ax1.scatter(actuals_quantiles, predictions_quantiles, alpha=0.6, s=30, color='blue', edgecolors='darkblue')
+    
+    # Linha de referência perfeita (y=x)
+    min_val = min(np.min(actuals_quantiles), np.min(predictions_quantiles))
+    max_val = max(np.max(actuals_quantiles), np.max(predictions_quantiles))
+    ax1.plot([min_val, max_val], [min_val, max_val], 'r-', linewidth=3, 
+             label='Linha Perfeita (distribuições idênticas)', alpha=0.8)
+    
+    # Linha de regressão através dos quantis
+    try:
+        from scipy import stats
+        slope, intercept, r_value, p_value, std_err = stats.linregress(actuals_quantiles, predictions_quantiles)
+        regression_line = slope * actuals_quantiles + intercept
+        ax1.plot(actuals_quantiles, regression_line, 'g--', linewidth=2, 
+                 label=f'Regressão (R²={r_value**2:.4f})', alpha=0.8)
+        
+        # Adicionar equação da reta
+        ax1.text(0.05, 0.95, f'y = {slope:.3f}x + {intercept:.3f}\nR² = {r_value**2:.4f}', 
+                transform=ax1.transAxes, bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7),
+                verticalalignment='top', fontsize=10, fontfamily='monospace')
+        
+    except Exception as e:
+        print(f"Aviso: Erro ao calcular regressão: {e}")
+    
+    ax1.set_xlabel('Quantis - Valores Reais', fontsize=12)
+    ax1.set_ylabel('Quantis - Predições', fontsize=12)
+    ax1.legend(fontsize=10)
+    ax1.grid(True, alpha=0.3)
+    
+    # Adicionar métricas no gráfico
+    from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
     r2 = r2_score(actuals, predictions)
-    r2_formatted = format_metric_value(r2, 'R²')
-    plt.text(0.05, 0.95, f'R² = {r2_formatted}', transform=plt.gca().transAxes, 
-             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8), fontsize=10)
+    rmse = np.sqrt(mean_squared_error(actuals, predictions))
+    mae = mean_absolute_error(actuals, predictions)
+    
+    # Teste de normalidade nos resíduos dos quantis
+    residuals_qq = predictions_quantiles - actuals_quantiles
+    shapiro_stat, shapiro_p = stats.shapiro(residuals_qq) if len(residuals_qq) <= 5000 else (np.nan, np.nan)
+    
+    metrics_text = (
+        f'Métricas Distribucionais:\n'
+        f'R² global: {r2:.4f}\n'
+        f'RMSE: {rmse:.4f}\n'
+        f'MAE: {mae:.4f}\n'
+        f'Shapiro-Wilk (resíduos QQ):\n'
+        f'  Estatística: {shapiro_stat:.4f}\n'
+        f'  p-value: {shapiro_p:.4f}' if not np.isnan(shapiro_stat) else 'Shapiro-Wilk: N/A (amostra grande)'
+    )
+    
+    ax1.text(0.02, 0.02, metrics_text, transform=ax1.transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8),
+             verticalalignment='bottom', fontsize=9, fontfamily='monospace')
+    
+    # ===== SUBPLOT 2: Análise de Desvios por Quantil =====
+    ax2.set_title('Análise de Desvios por Quantil', fontsize=14, fontweight='bold')
+    
+    # Calcular desvios relativos
+    desvios = (predictions_quantiles - actuals_quantiles) / actuals_quantiles * 100
+    quantil_positions = np.linspace(0, 100, len(desvios))
+    
+    # Plotar desvios
+    ax2.plot(quantil_positions, desvios, 'b-', linewidth=2, alpha=0.8, label='Desvio Relativo (%)')
+    ax2.axhline(y=0, color='red', linestyle='-', linewidth=2, alpha=0.8, label='Zero (perfeito)')
+    ax2.fill_between(quantil_positions, desvios, 0, alpha=0.3, color='blue')
+    
+    # Destacar quantis extremos (10% e 90%)
+    q10_idx = int(len(desvios) * 0.1)
+    q90_idx = int(len(desvios) * 0.9)
+    
+    ax2.scatter([10, 90], [desvios[q10_idx], desvios[q90_idx]], 
+               color='red', s=100, zorder=5, label='Quantis 10% e 90%')
+    
+    ax2.set_xlabel('Percentil (%)', fontsize=12)
+    ax2.set_ylabel('Desvio Relativo (%)', fontsize=12)
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3)
+    
+    # Análise dos desvios
+    desvio_medio = np.mean(np.abs(desvios))
+    desvio_max = np.max(np.abs(desvios))
+    desvio_std = np.std(desvios)
+    
+    # Identificar onde estão os maiores desvios
+    worst_quantile = quantil_positions[np.argmax(np.abs(desvios))]
+    
+    analysis_text = (
+        f'Análise de Desvios:\n'
+        f'Desvio médio: ±{desvio_medio:.2f}%\n'
+        f'Desvio máximo: ±{desvio_max:.2f}%\n'
+        f'Desvio padrão: {desvio_std:.2f}%\n'
+        f'Pior quantil: {worst_quantile:.0f}%\n'
+        f'Desvio Q10: {desvios[q10_idx]:+.2f}%\n'
+        f'Desvio Q90: {desvios[q90_idx]:+.2f}%'
+    )
+    
+    ax2.text(0.02, 0.98, analysis_text, transform=ax2.transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8),
+             verticalalignment='top', fontsize=9, fontfamily='monospace')
+    
+    # Interpretação
+    if desvio_medio < 5:
+        interpretation = "EXCELENTE: Distribuições muito similares"
+        interp_color = 'lightgreen'
+    elif desvio_medio < 10:
+        interpretation = "BOM: Distribuições similares"
+        interp_color = 'lightblue'
+    elif desvio_medio < 20:
+        interpretation = "MODERADO: Algumas diferenças distribucionais"
+        interp_color = 'lightyellow'
+    else:
+        interpretation = "RUIM: Diferenças significativas nas distribuições"
+        interp_color = 'lightcoral'
+    
+    ax2.text(0.02, 0.02, f'INTERPRETAÇÃO: {interpretation}', transform=ax2.transAxes, 
+             bbox=dict(boxstyle='round', facecolor=interp_color, alpha=0.9),
+             verticalalignment='bottom', fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
     
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Scatter plot salvo em: {save_path}")
+        print(f"QQ-Plot salvo em: {save_path}")
     
     plt.show()
+    
+    # Retornar métricas do QQ-plot
+    return {
+        'qq_r2': r_value**2 if 'r_value' in locals() else np.nan,
+        'qq_slope': slope if 'slope' in locals() else np.nan,
+        'qq_intercept': intercept if 'intercept' in locals() else np.nan,
+        'mean_relative_deviation': desvio_medio,
+        'max_relative_deviation': desvio_max,
+        'worst_quantile': worst_quantile,
+        'shapiro_stat': shapiro_stat if not np.isnan(shapiro_stat) else None,
+        'shapiro_pvalue': shapiro_p if not np.isnan(shapiro_p) else None
+    }
 
 
 def plot_metrics_comparison(results_dict, save_path=None, 
@@ -500,9 +644,9 @@ def create_comprehensive_report(results_dict, output_dir):
                            save_path=os.path.join(model_dir, 'predictions.png'),
                            title=f'Predições vs Reais - {model_name}')
             
-            plot_prediction_scatter(results['actuals'], results['predictions'],
-                                  save_path=os.path.join(model_dir, 'scatter.png'),
-                                  title=f'Scatter Plot - {model_name}')
+            plot_qq_analysis(results['actuals'], results['predictions'],
+                           save_path=os.path.join(model_dir, 'qq_analysis.png'),
+                           title=f'QQ-Plot - {model_name}')
             
             # ===== NOVOS GRÁFICOS FDA e FDP =====
             # Análise distribucional completa (FDA + FDP em uma figura)
