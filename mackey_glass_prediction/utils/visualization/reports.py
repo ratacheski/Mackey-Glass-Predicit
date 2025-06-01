@@ -17,6 +17,7 @@ from .basic_plots import plot_training_history, plot_predictions, plot_metrics_c
 from .distribution_analysis import plot_qq_analysis, plot_cdf_comparison, plot_pdf_comparison
 from .statistical_tests import plot_ks_test_analysis, plot_autocorrelation_analysis
 from .comparison_plots import plot_models_comparison_overview
+from .interactive_html import generate_interactive_html_report
 
 
 def generate_comprehensive_report(results_dict, output_dir, model_name=None):
@@ -174,6 +175,15 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
         generated_files['html_report'] = html_report_path
     except Exception as e:
         print(f"⚠️ Erro no relatório HTML: {e}")
+    
+    # ========== RELATÓRIO HTML INTERATIVO ==========
+    print("\n🌐 Gerando relatório HTML interativo...")
+    interactive_html_path = os.path.join(output_dir, f"relatorio_interativo_{timestamp}.html")
+    try:
+        generate_interactive_html_report(single_model_results, generated_files, interactive_html_path, report_type)
+        generated_files['interactive_html_report'] = interactive_html_path
+    except Exception as e:
+        print(f"⚠️ Erro no relatório HTML interativo: {e}")
     
     print(f"\n✅ Relatório abrangente gerado com sucesso!")
     print(f"📁 {len(generated_files)} arquivos gerados em: {output_dir}")
