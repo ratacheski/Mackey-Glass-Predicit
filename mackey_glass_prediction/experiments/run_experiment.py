@@ -203,7 +203,7 @@ def run_single_experiment(model_name, verbose=True):
     return results
 
 
-def run_all_experiments(models_to_run=None, save_results=True):
+def run_all_experiments(models_to_run=None, save_results=True, output_dir_prefix=None):
     """
     Executa experimentos para todos os modelos especificados
     """
@@ -237,7 +237,14 @@ def run_all_experiments(models_to_run=None, save_results=True):
         print(f"{'='*60}")
         
         # Criar diretório de resultados
-        output_dir = f"./results/final_report_{int(time.time())}"
+        if output_dir_prefix:
+            # Se foi especificado um prefixo personalizado, usar ele
+            timestamp = int(time.time())
+            output_dir = f"./{output_dir_prefix}_{timestamp}"
+        else:
+            # Usar o padrão original
+            output_dir = f"./results/final_report_{int(time.time())}"
+        
         os.makedirs(output_dir, exist_ok=True)
         
         # Gerar relatório abrangente
@@ -295,6 +302,8 @@ if __name__ == "__main__":
     parser.add_argument('--models', nargs='+', choices=ALL_MODELS + ['main', 'all'], 
                        default='main', help='Modelos para executar')
     parser.add_argument('--no-save', action='store_true', help='Não salvar resultados')
+    parser.add_argument('--output-dir', type=str, default=None, 
+                       help='Prefixo personalizado para a pasta de saída (ex: meu_experimento)')
     
     args = parser.parse_args()
     
@@ -306,7 +315,12 @@ if __name__ == "__main__":
         models_to_run = args.models
     
     # Executar experimentos
-    results = run_all_experiments(models_to_run, save_results=not args.no_save)
+    results = run_all_experiments(models_to_run, save_results=not args.no_save, 
+                                output_dir_prefix=args.output_dir)
     
     print(f"\nExperimentos concluídos!")
-    print(f"Total de modelos executados: {len(results)}") 
+    print(f"Total de modelos executados: {len(results)}")
+    
+    # Mostrar informação sobre a pasta de saída se foi especificada
+    if args.output_dir and not args.no_save:
+        print(f"Resultados salvos com prefixo: {args.output_dir}") 
