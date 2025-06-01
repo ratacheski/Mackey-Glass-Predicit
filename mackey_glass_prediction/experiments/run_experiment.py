@@ -12,7 +12,7 @@ import time
 from models import MLPModel, LSTMModel, GRUModel
 from data.mackey_glass_generator import MackeyGlassGenerator, create_dataloaders
 from utils.training import train_model, validate_epoch, predict_sequence, calculate_metrics
-from utils.visualization import create_comprehensive_report, plot_sequential_predictions
+from utils import visualization as viz
 from config.config import (
     get_experiment_config, MAIN_MODELS, ALL_MODELS, DEVICE, RANDOM_SEED
 )
@@ -247,12 +247,12 @@ def run_all_experiments(models_to_run=None, save_results=True, output_dir_prefix
         
         os.makedirs(output_dir, exist_ok=True)
         
-        # Gerar relatório abrangente
-        create_comprehensive_report(all_results, output_dir)
+        # Gerar relatório abrangente com o novo sistema
+        viz.generate_comprehensive_report(all_results, output_dir)
         
-        # Plotar predições sequenciais para cada modelo
+        # Plotar predições sequenciais para cada modelo usando o novo sistema
         for model_name, results in all_results.items():
-            plot_sequential_predictions(
+            viz.plot_sequential_predictions(
                 results['series'],
                 results['train_size'],
                 results['sequential_predictions'],
