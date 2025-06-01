@@ -16,7 +16,7 @@ from .utils import ensure_output_dir, print_save_message, validate_and_clean_met
 from .basic_plots import plot_training_history, plot_predictions, plot_metrics_comparison, save_metrics_table
 from .distribution_analysis import plot_qq_analysis, plot_cdf_comparison, plot_pdf_comparison
 from .statistical_tests import plot_ks_test_analysis, plot_autocorrelation_analysis
-from .comparison_plots import plot_models_comparison_overview, plot_performance_radar
+from .comparison_plots import plot_models_comparison_overview
 
 
 def generate_comprehensive_report(results_dict, output_dir, model_name=None):
@@ -145,14 +145,6 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
     # ========== ANÁLISES COMPARATIVAS ==========
     if report_type == "comparison" and len(single_model_results) > 1:
         print("\n🆚 Gerando análises comparativas...")
-        
-        # Gráfico radar
-        radar_path = os.path.join(output_dir, f"99_radar_performance_{timestamp}.png")
-        try:
-            plot_performance_radar(single_model_results, save_path=radar_path)
-            generated_files['radar'] = radar_path
-        except Exception as e:
-            print(f"⚠️ Erro no gráfico radar: {e}")
         
         # Tabela de métricas
         metrics_table_path = os.path.join(output_dir, f"99_tabela_metricas_{timestamp}.png")
@@ -716,8 +708,6 @@ def generate_html_report(results_dict, generated_files, save_path, report_type="
                 title = f"Comparação de FDP"
             elif 'ks' in file_key:
                 title = f"Teste Kolmogorov-Smirnov"
-            elif 'radar' in file_key:
-                title = "Gráfico Radar de Performance"
             elif 'metrics' in file_key:
                 title = "Tabela de Métricas"
             else:

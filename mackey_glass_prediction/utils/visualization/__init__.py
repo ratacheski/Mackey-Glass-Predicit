@@ -53,8 +53,7 @@ from .comparison_plots import (
     plot_models_comparison_overview,
     plot_predictions_comparison,
     plot_residuals_comparison,
-    plot_training_comparison,
-    plot_performance_radar
+    plot_training_comparison
 )
 
 from .reports import (
@@ -100,7 +99,6 @@ __all__ = [
     'plot_predictions_comparison',
     'plot_residuals_comparison',
     'plot_training_comparison',
-    'plot_performance_radar',
     
     # Reports
     'generate_comprehensive_report',
@@ -148,7 +146,6 @@ def show_available_functions():
     print("   • plot_predictions_comparison() - Comparar predições")
     print("   • plot_residuals_comparison() - Comparar resíduos")
     print("   • plot_training_comparison() - Comparar treinamento")
-    print("   • plot_performance_radar() - Gráfico radar")
     
     print("\n📄 RELATÓRIOS:")
     print("   • generate_comprehensive_report() - Relatório completo")
@@ -287,11 +284,6 @@ def quick_analysis(results_dict, output_dir="analysis_output", model_name=None):
         overview_path = f"{output_dir}/models_overview.png"
         plot_models_comparison_overview(results_dict, save_path=overview_path)
         generated['overview'] = overview_path
-        
-        # Gráfico radar
-        radar_path = f"{output_dir}/performance_radar.png"
-        plot_performance_radar(results_dict, save_path=radar_path)
-        generated['radar'] = radar_path
         
         # Comparação de predições
         pred_comp_path = f"{output_dir}/predictions_comparison.png"
