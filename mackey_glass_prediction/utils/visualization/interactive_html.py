@@ -55,6 +55,32 @@ def get_html_styles():
             opacity: 0.9;
         }
         
+        .author-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .author-info h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .author-info .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .author-info .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .content {
             padding: 30px;
         }
@@ -279,6 +305,85 @@ def get_html_styles():
             height: auto;
             border-radius: 10px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .chart-container img:hover {
+            transform: scale(1.02);
+        }
+        
+        .model-charts-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .model-charts-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .model-charts-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Modal para tela cheia */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 95%;
+            max-height: 95%;
+        }
+        
+        .modal-image {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+        }
+        
+        .close-modal:hover {
+            color: #ccc;
         }
         
         .tooltip {
@@ -374,6 +479,10 @@ def get_html_styles():
                 grid-template-columns: 1fr;
             }
             
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
             .navigation {
                 flex-direction: column;
                 align-items: center;
@@ -389,6 +498,11 @@ def get_html_styles():
             
             .content {
                 padding: 20px;
+            }
+            
+            .author-info .info-row {
+                flex-direction: column;
+                gap: 10px;
             }
         }
     </style>
@@ -469,6 +583,57 @@ def get_html_scripts():
             }
         }
         
+        // Modal para visualização em tela cheia
+        function openModal(imageSrc, imageTitle) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            
+            modal.style.display = 'block';
+            modalImage.src = imageSrc;
+            modalImage.alt = imageTitle;
+            
+            // Adicionar título se necessário
+            if (!document.querySelector('.modal-title')) {
+                const title = document.createElement('h3');
+                title.className = 'modal-title';
+                title.style.cssText = 'color: white; text-align: center; margin-bottom: 20px; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10002;';
+                title.textContent = imageTitle;
+                document.querySelector('.modal-content').appendChild(title);
+            } else {
+                document.querySelector('.modal-title').textContent = imageTitle;
+            }
+            
+            // Prevenir scroll do body
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            
+            // Restaurar scroll do body
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Fechar modal ao clicar fora da imagem
+        function setupModalEvents() {
+            const modal = document.getElementById('imageModal');
+            if (modal) {
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+                
+                // Fechar modal com tecla ESC
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape') {
+                        closeModal();
+                    }
+                });
+            }
+        }
+        
         // Animações ao fazer scroll
         function handleScrollAnimations() {
             const cards = document.querySelectorAll('.metric-card');
@@ -487,6 +652,9 @@ def get_html_scripts():
         document.addEventListener('DOMContentLoaded', function() {
             // Mostrar primeira seção por padrão
             showSection('resumo');
+            
+            // Configurar modal
+            setupModalEvents();
             
             // Configurar animações de scroll
             window.addEventListener('scroll', handleScrollAnimations);
@@ -512,6 +680,43 @@ def get_html_scripts():
                     this.style.transform = 'translateY(0) scale(1)';
                 });
             });
+            
+            // Efeitos para imagens de gráficos
+            const images = document.querySelectorAll('.chart-container img');
+            images.forEach(img => {
+                img.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+                });
+                
+                img.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '0 3px 10px rgba(0,0,0,0.1)';
+                });
+            });
+        });
+        
+        // Função para destacar métricas importantes
+        function highlightBestMetrics() {
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach(card => {
+                const value = card.querySelector('.metric-value');
+                const title = card.querySelector('.metric-title');
+                
+                if (title && title.textContent.includes('R²')) {
+                    const r2Value = parseFloat(value.textContent);
+                    if (r2Value > 0.95) {
+                        card.style.border = '2px solid #27ae60';
+                        card.style.boxShadow = '0 0 20px rgba(39, 174, 96, 0.3)';
+                    }
+                }
+            });
+        }
+        
+        // Executar após carregamento completo
+        window.addEventListener('load', function() {
+            highlightBestMetrics();
+            console.log('🎉 Relatório HTML Interativo totalmente carregado!');
         });
     </script>
     """
@@ -576,6 +781,23 @@ def get_metric_explanations():
             <strong>Fórmula:</strong> MAE = Σ|yi - ŷi| / n
             '''
         },
+        'mse': {
+            'name': 'MSE (Erro Quadrático Médio)',
+            'icon': '📈',
+            'explanation': '''
+            O MSE mede a média dos quadrados dos erros de predição.
+            <br><br>
+            <strong>Características:</strong>
+            <ul>
+                <li>Base para cálculo do RMSE</li>
+                <li>Penaliza erros grandes quadraticamente</li>
+                <li>Sempre não-negativo</li>
+                <li>Unidade quadrática dos dados originais</li>
+            </ul>
+            <br>
+            <strong>Fórmula:</strong> MSE = Σ(yi - ŷi)² / n
+            '''
+        },
         'mape': {
             'name': 'MAPE (Erro Percentual Absoluto Médio)',
             'icon': '📊',
@@ -592,6 +814,40 @@ def get_metric_explanations():
             <br>
             <strong>Fórmula:</strong> MAPE = (100/n) × Σ|yi - ŷi|/|yi|
             '''
+        },
+        'eqmn1': {
+            'name': 'EQMN1 (Erro Quadrático Médio Normalizado - Variância)',
+            'icon': '📊',
+            'explanation': '''
+            O EQMN1 normaliza o MSE pela variância dos valores reais.
+            <br><br>
+            <strong>Características:</strong>
+            <ul>
+                <li>Normalizado entre 0 e 1</li>
+                <li>Independente da escala dos dados</li>
+                <li>Útil para comparação entre datasets</li>
+                <li>Valores menores indicam melhor performance</li>
+            </ul>
+            <br>
+            <strong>Fórmula:</strong> EQMN1 = MSE / Var(y_true)
+            '''
+        },
+        'eqmn2': {
+            'name': 'EQMN2 (Erro Quadrático Médio Normalizado - Quadrado da Média)',
+            'icon': '📉',
+            'explanation': '''
+            O EQMN2 normaliza o MSE pelo quadrado da média dos valores reais.
+            <br><br>
+            <strong>Características:</strong>
+            <ul>
+                <li>Normalização alternativa ao EQMN1</li>
+                <li>Útil quando a média é significativa</li>
+                <li>Independente da escala dos dados</li>
+                <li>Valores menores indicam melhor performance</li>
+            </ul>
+            <br>
+            <strong>Fórmula:</strong> EQMN2 = MSE / (mean(y_true))²
+            '''
         }
     }
 
@@ -601,15 +857,26 @@ def calculate_metrics(actuals, predictions):
     predictions = np.array(predictions).flatten()
     
     r2 = r2_score(actuals, predictions)
-    rmse = np.sqrt(mean_squared_error(actuals, predictions))
+    mse = mean_squared_error(actuals, predictions)
+    rmse = np.sqrt(mse)
     mae = mean_absolute_error(actuals, predictions)
     mape = np.mean(np.abs((actuals - predictions) / actuals)) * 100 if np.all(actuals != 0) else np.nan
+    
+    # Calcular EQMN1 e EQMN2
+    var_actuals = np.var(actuals)
+    mean_actuals = np.mean(actuals)
+    
+    eqmn1 = mse / var_actuals if var_actuals != 0 else np.nan
+    eqmn2 = mse / (mean_actuals ** 2) if mean_actuals != 0 else np.nan
     
     return {
         'r2': r2,
         'rmse': rmse,
         'mae': mae,
-        'mape': mape
+        'mse': mse,
+        'mape': mape,
+        'eqmn1': eqmn1,
+        'eqmn2': eqmn2
     }
 
 def get_metric_status(metric_name, value):
@@ -667,6 +934,44 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
             <div class="header">
                 <h1>🧠 Relatório Interativo de Machine Learning</h1>
                 <div class="timestamp">📅 Gerado em: {timestamp}</div>
+                
+                <div class="author-info">
+                    <h3>👨‍🎓 Autor</h3>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span>👤</span>
+                            <strong>Rafael Ratacheski de Sousa Raulino</strong>
+                        </div>
+                        <div class="info-item">
+                            <span>📧</span>
+                            <a href="mailto:ratacheski@discente.ufg.br" style="color: white;">ratacheski@discente.ufg.br</a>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span>🎓</span>
+                            Mestrando em Engenharia Elétrica e de Computação
+                        </div>
+                        <div class="info-item">
+                            <span>🏛️</span>
+                            PPGEEC - UFG
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span>📚</span>
+                            Disciplina: Redes Neurais Profundas
+                        </div>
+                        <div class="info-item">
+                            <span>📅</span>
+                            Período: 2025/1
+                        </div>
+                        <div class="info-item">
+                            <span>📝</span>
+                            Trabalho Computacional 2
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="navigation">
@@ -802,6 +1107,23 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                             </div>
             """
             
+            # Card MSE
+            html_content += f"""
+                            <div class="metric-card">
+                                <div class="metric-title">
+                                    {explanations['mse']['icon']} {explanations['mse']['name']}
+                                    <button class="toggle-btn" onclick="toggleExplanation('mse-explanation-{model_name.replace(" ", "_")}')">?</button>
+                                </div>
+                                <div class="metric-value" style="color: #3498db">
+                                    {metrics['mse']:.6f}
+                                </div>
+                                <div class="metric-explanation">Menor é melhor</div>
+                                <div id="mse-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
+                                    {explanations['mse']['explanation']}
+                                </div>
+                            </div>
+            """
+            
             # Card MAPE (se disponível)
             if not np.isnan(metrics['mape']):
                 mape_status_class, mape_status_text = get_metric_status('mape', metrics['mape'])
@@ -817,6 +1139,42 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-status {mape_status_class}">{mape_status_text}</div>
                                 <div id="mape-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['mape']['explanation']}
+                                </div>
+                            </div>
+                """
+            
+            # Card EQMN1
+            if not np.isnan(metrics['eqmn1']):
+                html_content += f"""
+                            <div class="metric-card">
+                                <div class="metric-title">
+                                    {explanations['eqmn1']['icon']} {explanations['eqmn1']['name']}
+                                    <button class="toggle-btn" onclick="toggleExplanation('eqmn1-explanation-{model_name.replace(" ", "_")}')">?</button>
+                                </div>
+                                <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn1'] < 0.1 else '#f39c12' if metrics['eqmn1'] < 0.5 else '#e74c3c'}">
+                                    {metrics['eqmn1']:.6f}
+                                </div>
+                                <div class="metric-explanation">Menor é melhor (normalizado)</div>
+                                <div id="eqmn1-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
+                                    {explanations['eqmn1']['explanation']}
+                                </div>
+                            </div>
+                """
+            
+            # Card EQMN2
+            if not np.isnan(metrics['eqmn2']):
+                html_content += f"""
+                            <div class="metric-card">
+                                <div class="metric-title">
+                                    {explanations['eqmn2']['icon']} {explanations['eqmn2']['name']}
+                                    <button class="toggle-btn" onclick="toggleExplanation('eqmn2-explanation-{model_name.replace(" ", "_")}')">?</button>
+                                </div>
+                                <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn2'] < 0.1 else '#f39c12' if metrics['eqmn2'] < 0.5 else '#e74c3c'}">
+                                    {metrics['eqmn2']:.6f}
+                                </div>
+                                <div class="metric-explanation">Menor é melhor (normalizado)</div>
+                                <div id="eqmn2-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
+                                    {explanations['eqmn2']['explanation']}
                                 </div>
                             </div>
                 """
@@ -852,39 +1210,118 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                     
                     <div class="highlight-box">
                         <h3><span class="info-icon">📊</span>Gráficos Explicativos</h3>
-                        <p>Os gráficos abaixo mostram diferentes aspectos da performance dos modelos. Clique em cada imagem para ver em tamanho completo.</p>
+                        <p>Os gráficos abaixo mostram diferentes aspectos da performance dos modelos. Clique em cada imagem para visualizar em tela cheia.</p>
                     </div>
                     
-                    <div class="metric-grid">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('graficos-comparativos')">📊 Gráficos Comparativos</button>
+                        <button class="tab" onclick="showTab('graficos-individuais')">🔍 Análises Individuais</button>
+                    </div>
+                    
+                    <div id="graficos-comparativos" class="tab-content active">
+                        <h3>🌐 Análises Comparativas</h3>
+                        <div class="metric-grid">
     """
     
-    # Adicionar gráficos
+    # Adicionar gráficos comparativos
+    comparative_charts = ['overview', 'metrics_comparison', 'metrics_table']
     for file_key, file_path in generated_files.items():
-        if file_path.endswith('.png'):
+        if any(keyword in file_key for keyword in comparative_charts) and file_path.endswith('.png'):
             file_name = os.path.basename(file_path)
             
-            # Título mais descritivo
             title_map = {
                 'overview': '🌐 Visão Geral Comparativa',
-                'training': '📈 Histórico de Treinamento',
-                'predictions': '🎯 Predições vs Valores Reais',
-                'qq': '📊 Análise Q-Q Plot',
-                'cdf': '📋 Função de Distribuição Acumulada',
-                'pdf': '📊 Função de Densidade de Probabilidade',
-                'ks': '🔬 Teste Kolmogorov-Smirnov',
-                'metrics': '📊 Tabela de Métricas'
+                'metrics_comparison': '📊 Comparação de Métricas',
+                'metrics_table': '📋 Tabela de Métricas'
             }
             
             title = title_map.get(file_key.split('_')[0], file_name.replace('_', ' ').replace('.png', '').title())
             
             html_content += f"""
-                        <div class="chart-container">
-                            <h4>{title}</h4>
-                            <img src="{file_name}" alt="{title}" onclick="window.open('{file_name}', '_blank')">
+                            <div class="chart-container">
+                                <h4>{title}</h4>
+                                <img src="{file_name}" alt="{title}" onclick="openModal('{file_name}', '{title}')">
+                            </div>
+            """
+    
+    html_content += """
+                        </div>
+                    </div>
+                    
+                    <div id="graficos-individuais" class="tab-content">
+                        <h3>🔍 Análises por Modelo</h3>
+    """
+    
+    # Organizar gráficos por modelo
+    models_in_files = set()
+    for file_key in generated_files.keys():
+        for model_name in results_dict.keys():
+            clean_model_name = model_name.replace(" ", "_")
+            if clean_model_name in file_key:
+                models_in_files.add(model_name)
+                break
+    
+    for model_name in models_in_files:
+        clean_model_name = model_name.replace(" ", "_")
+        model_files = {k: v for k, v in generated_files.items() if clean_model_name in k and v.endswith('.png')}
+        
+        if model_files:
+            html_content += f"""
+                        <div class="model-charts-section">
+                            <div class="model-charts-header">
+                                <h4 class="model-charts-title">🤖 {model_name}</h4>
+                            </div>
+                            <div class="charts-grid">
+            """
+            
+            for file_key, file_path in model_files.items():
+                file_name = os.path.basename(file_path)
+                
+                # Títulos mais descritivos
+                title_map = {
+                    'training': '📈 Histórico de Treinamento',
+                    'predictions': '🎯 Predições vs Valores Reais',
+                    'qq': '📊 Análise Q-Q Plot',
+                    'cdf': '📋 Função de Distribuição Acumulada',
+                    'pdf': '📊 Função de Densidade de Probabilidade',
+                    'ks': '🔬 Teste Kolmogorov-Smirnov',
+                    'residuals': '📉 Análise de Resíduos',
+                    'autocorr': '🔄 Autocorrelação'
+                }
+                
+                # Identificar tipo do gráfico
+                chart_type = 'outros'
+                for key in title_map.keys():
+                    if key in file_key:
+                        chart_type = key
+                        break
+                
+                title = title_map.get(chart_type, file_name.replace('_', ' ').replace('.png', '').title())
+                
+                html_content += f"""
+                                <div class="chart-container">
+                                    <h5>{title}</h5>
+                                    <img src="{file_name}" alt="{title}" onclick="openModal('{file_name}', '{model_name} - {title}')">
+                                </div>
+                """
+            
+            html_content += """
+                            </div>
                         </div>
             """
     
     html_content += """
+                    </div>
+                </div>
+    """
+    
+    # Modal para tela cheia
+    html_content += """
+                <!-- Modal para visualização em tela cheia -->
+                <div id="imageModal" class="modal">
+                    <span class="close-modal" onclick="closeModal()">&times;</span>
+                    <div class="modal-content">
+                        <img id="modalImage" class="modal-image" alt="Imagem em tela cheia">
                     </div>
                 </div>
     """

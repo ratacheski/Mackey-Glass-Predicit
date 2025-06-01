@@ -98,6 +98,10 @@ def main():
     """Função principal para gerar o relatório interativo"""
     print("🚀 Gerando Relatório HTML Interativo e Didático...")
     print("=" * 60)
+    print("📝 Desenvolvido por: Rafael Ratacheski de Sousa Raulino")
+    print("🎓 Mestrando em Engenharia Elétrica e de Computação - UFG")
+    print("📚 Disciplina: Redes Neurais Profundas - 2025/1")
+    print("=" * 60)
     
     # Criar diretório de saída
     output_dir = "output_reports"
@@ -108,11 +112,32 @@ def main():
     sample_results = create_sample_results()
     sample_files = create_sample_files()
     
+    # Mostrar preview das métricas calculadas
+    print("\n📈 Preview das Métricas Calculadas:")
+    print("-" * 50)
+    
+    from utils.visualization.interactive_html import calculate_metrics
+    
+    for model_name, data in sample_results.items():
+        if 'actuals' in data and 'predictions' in data:
+            metrics = calculate_metrics(data['actuals'], data['predictions'])
+            print(f"\n🤖 {model_name}:")
+            print(f"   R²: {metrics['r2']:.6f}")
+            print(f"   RMSE: {metrics['rmse']:.6f}")
+            print(f"   MAE: {metrics['mae']:.6f}")
+            print(f"   MSE: {metrics['mse']:.6f}")
+            if not np.isnan(metrics['mape']):
+                print(f"   MAPE: {metrics['mape']:.2f}%")
+            if not np.isnan(metrics['eqmn1']):
+                print(f"   EQMN1: {metrics['eqmn1']:.6f}")
+            if not np.isnan(metrics['eqmn2']):
+                print(f"   EQMN2: {metrics['eqmn2']:.6f}")
+    
     # Gerar relatório HTML interativo
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     html_path = os.path.join(output_dir, f"relatorio_interativo_{timestamp}.html")
     
-    print("🌐 Gerando relatório HTML...")
+    print(f"\n🌐 Gerando relatório HTML...")
     
     try:
         generate_interactive_html_report(
@@ -125,6 +150,12 @@ def main():
         print("\n✅ Relatório gerado com sucesso!")
         print(f"📁 Arquivo: {html_path}")
         print(f"🌐 Para visualizar, abra o arquivo em um navegador web")
+        print("\n🔧 Funcionalidades incluídas:")
+        print("   • 📊 Métricas detalhadas (R², RMSE, MAE, MSE, MAPE, EQMN1, EQMN2)")
+        print("   • 🖼️  Visualização de imagens em tela cheia")
+        print("   • 📈 Gráficos organizados por modelo")
+        print("   • 📋 Comparações interativas")
+        print("   • 👨‍🎓 Informações do autor")
         
         # Tentar abrir automaticamente no navegador (Linux)
         try:
