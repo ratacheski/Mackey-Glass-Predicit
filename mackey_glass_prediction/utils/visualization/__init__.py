@@ -59,14 +59,13 @@ from .comparison_plots import (
 from .reports import (
     generate_comprehensive_report,
     generate_text_report,
-    generate_html_report,
     generate_quick_summary
 )
 
 # Versão do pacote
 __version__ = "1.0.0"
 
-# Funções principais (atalhos)
+# Lista de todas as funções disponíveis
 __all__ = [
     # Utils
     'format_metric_value',
@@ -103,7 +102,6 @@ __all__ = [
     # Reports
     'generate_comprehensive_report',
     'generate_text_report',
-    'generate_html_report',
     'generate_quick_summary'
 ]
 
@@ -150,7 +148,6 @@ def show_available_functions():
     print("\n📄 RELATÓRIOS:")
     print("   • generate_comprehensive_report() - Relatório completo")
     print("   • generate_text_report() - Relatório textual")
-    print("   • generate_html_report() - Relatório HTML")
     print("   • generate_quick_summary() - Resumo rápido")
     
     print("\n" + "=" * 60)
