@@ -154,7 +154,7 @@ def plot_metrics_comparison(results_dict, save_path=None,
     # Preparar dados
     models = list(results_dict.keys())
     # Métricas que serão plotadas
-    metrics = ['MSE', 'R²', 'D2_PINBALL_LOSS', 'MEAN_PINBALL_LOSS']
+    metrics = ['MSE', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
     
     # Verificar quais métricas estão disponíveis nos dados
     available_metrics = []
@@ -200,7 +200,7 @@ def plot_metrics_comparison(results_dict, save_path=None,
         valid_values = [v for v in values if not (np.isnan(v) or np.isinf(v))]
         if valid_values:    
             # Para R² e d2 pinball loss maior é melhor, para outras métricas menor é melhor
-            if metric in ['R²', 'D2_PINBALL_LOSS']:
+            if metric in ['R²', 'D2_PINBALL_SCORE']:
                 best_value = max(valid_values)
                 best_idx = values.index(best_value)
             else:
@@ -240,7 +240,7 @@ def save_metrics_table(results_dict, save_path):
     results_dict = validate_and_clean_metrics(results_dict)
     
     # Métricas que serão plotadas (mesmas da plot_metrics_comparison)
-    target_metrics = ['MSE', 'R²', 'D2_PINBALL_LOSS', 'MEAN_PINBALL_LOSS']
+    target_metrics = ['MSE', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
     
     # Verificar se há modelos disponíveis
     if not results_dict:
@@ -337,7 +337,7 @@ def save_metrics_table(results_dict, save_path):
                     
                     # Encontrar melhor valor
                     # R² e d2 pinball loss são melhores quando maiores; outras métricas são melhores quando menores
-                    if metric_name in ['R²', 'D2_PINBALL_LOSS']:
+                    if metric_name in ['R²', 'D2_PINBALL_SCORE']:
                         best_value = np.max(valid_values)
                         is_best = abs(df.iloc[i-1][metric_name] - best_value) < 1e-6
                     else:
