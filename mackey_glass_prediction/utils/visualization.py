@@ -519,6 +519,38 @@ def create_comprehensive_report(results_dict, output_dir):
             plot_pdf_comparison(results['actuals'], results['predictions'],
                               save_path=os.path.join(model_dir, 'fdp_comparison.png'),
                               title=f'FDP - {model_name}')
+            
+            # ===== NOVO: TESTE DE KOLMOGOROV-SMIRNOV =====
+            # Análise detalhada do teste KS de duas amostras
+            ks_results = plot_ks_test_analysis(results['actuals'], results['predictions'],
+                                             save_path=os.path.join(model_dir, 'ks_test_analysis.png'),
+                                             title=f'Teste Kolmogorov-Smirnov - {model_name}')
+            
+            # Salvar resultados do teste KS em arquivo texto
+            ks_summary_path = os.path.join(model_dir, 'ks_test_summary.txt')
+            with open(ks_summary_path, 'w', encoding='utf-8') as f:
+                f.write(f"TESTE DE KOLMOGOROV-SMIRNOV - {model_name}\n")
+                f.write("=" * 50 + "\n\n")
+                f.write("HIPÓTESES:\n")
+                f.write("H₀: As predições e valores reais seguem a mesma distribuição\n")
+                f.write("H₁: As predições e valores reais seguem distribuições diferentes\n\n")
+                f.write("RESULTADOS:\n")
+                f.write(f"Estatística KS: {ks_results['ks_statistic']:.6f}\n")
+                f.write(f"p-value: {ks_results['p_value']:.6f}\n")
+                f.write(f"Nível de significância (α): {ks_results['alpha']}\n")
+                f.write(f"Localização da diferença máxima: {ks_results['max_diff_location']:.6f}\n\n")
+                f.write("CONCLUSÃO:\n")
+                f.write(f"{ks_results['conclusion']}\n\n")
+                if ks_results['reject_h0']:
+                    f.write("INTERPRETAÇÃO: Há evidência estatística significativa de que\n")
+                    f.write("as distribuições das predições e valores reais são diferentes.\n")
+                    f.write("O modelo NÃO reproduz adequadamente a distribuição dos dados.\n")
+                else:
+                    f.write("INTERPRETAÇÃO: NÃO há evidência estatística suficiente para\n")
+                    f.write("afirmar que as distribuições sejam diferentes.\n")
+                    f.write("O modelo reproduz adequadamente a distribuição dos dados.\n")
+            
+            print(f"Resumo do teste KS salvo em: {ks_summary_path}")
     
     # 4. Comparação FDA/FDP entre todos os modelos
     print("Gerando comparações distribucionais entre modelos...")
@@ -534,6 +566,60 @@ def create_comprehensive_report(results_dict, output_dir):
     # FDP comparativo
     plot_multi_model_pdf_comparison(results_dict,
                                    save_path=os.path.join(comparison_dir, 'all_models_fdp.png'))
+    
+    # ===== NOVO: COMPARAÇÃO TESTE KS ENTRE MODELOS =====
+    # Comparação dos testes de Kolmogorov-Smirnov
+    ks_comparison_results = plot_multi_model_ks_comparison(results_dict,
+                                                         save_path=os.path.join(comparison_dir, 'all_models_ks_comparison.png'))
+    
+    # Salvar resumo geral dos testes KS
+    ks_general_summary_path = os.path.join(comparison_dir, 'ks_general_summary.txt')
+    with open(ks_general_summary_path, 'w', encoding='utf-8') as f:
+        f.write("RESUMO GERAL - TESTES DE KOLMOGOROV-SMIRNOV\n")
+        f.write("=" * 60 + "\n\n")
+        f.write("OBJETIVO: Avaliar se as predições de cada modelo seguem a mesma\n")
+        f.write("distribuição de probabilidade dos valores reais.\n\n")
+        f.write("HIPÓTESES:\n")
+        f.write("H₀: Predições e valores reais seguem a mesma distribuição\n")
+        f.write("H₁: Predições e valores reais seguem distribuições diferentes\n\n")
+        f.write(f"NÍVEL DE SIGNIFICÂNCIA: α = {ks_comparison_results['alpha']}\n\n")
+        f.write("RESULTADOS POR MODELO:\n")
+        f.write("-" * 40 + "\n")
+        
+        for i, model in enumerate(ks_comparison_results['models']):
+            f.write(f"\n{model}:\n")
+            f.write(f"  Estatística KS: {ks_comparison_results['ks_statistics'][i]:.6f}\n")
+            f.write(f"  p-value: {ks_comparison_results['p_values'][i]:.6f}\n")
+            f.write(f"  Resultado: {'REJEITA H₀' if ks_comparison_results['rejections'][i] else 'NÃO REJEITA H₀'}\n")
+            if ks_comparison_results['rejections'][i]:
+                f.write(f"  Interpretação: Distribuições DIFERENTES - Modelo não adequado\n")
+            else:
+                f.write(f"  Interpretação: Distribuições SIMILARES - Modelo adequado\n")
+        
+        f.write(f"\n\nRESUMO ESTATÍSTICO:\n")
+        f.write("-" * 30 + "\n")
+        summary = ks_comparison_results['summary']
+        f.write(f"Total de modelos avaliados: {summary['total_models']}\n")
+        f.write(f"Modelos com distribuição adequada: {summary['models_with_good_distribution']}\n")
+        f.write(f"Modelos com distribuição inadequada: {summary['models_with_different_distribution']}\n")
+        f.write(f"Taxa de adequação: {(summary['models_with_good_distribution']/summary['total_models']*100):.1f}%\n\n")
+        
+        f.write("INTERPRETAÇÃO GERAL:\n")
+        f.write("-" * 25 + "\n")
+        if summary['models_with_good_distribution'] > summary['models_with_different_distribution']:
+            f.write("A MAIORIA dos modelos reproduz adequadamente a distribuição dos dados.\n")
+            f.write("Isso indica que as predições seguem padrões estatísticos similares\n")
+            f.write("aos valores reais, o que é um bom indicativo de qualidade dos modelos.\n")
+        elif summary['models_with_different_distribution'] > summary['models_with_good_distribution']:
+            f.write("A MAIORIA dos modelos NÃO reproduz adequadamente a distribuição dos dados.\n")
+            f.write("Isso pode indicar problemas de overfitting, underfitting ou\n")
+            f.write("inadequação dos modelos para capturar as características estatísticas\n")
+            f.write("dos dados reais.\n")
+        else:
+            f.write("Há um EMPATE entre modelos adequados e inadequados.\n")
+            f.write("Recomenda-se análise mais detalhada de cada modelo individualmente.\n")
+    
+    print(f"Resumo geral dos testes KS salvo em: {ks_general_summary_path}")
     
     print(f"Relatório completo gerado em: {output_dir}")
     return df_metrics
@@ -909,4 +995,324 @@ def plot_multi_model_pdf_comparison(results_dict, save_path=None, title="Compara
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print(f"Comparação FDP multi-modelo salva em: {save_path}")
     
-    plt.show() 
+    plt.show()
+
+
+def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Teste de Kolmogorov-Smirnov de Duas Amostras", alpha=0.05):
+    """
+    Visualiza em detalhes o teste de Kolmogorov-Smirnov de duas amostras
+    
+    Args:
+        actuals: Valores reais
+        predictions: Predições do modelo
+        save_path: Caminho para salvar o gráfico
+        title: Título do gráfico
+        alpha: Nível de significância (padrão: 0.05)
+    """
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
+    
+    # Garantir que são arrays numpy
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
+    
+    # Realizar teste KS de duas amostras
+    ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
+    
+    # Determinar resultado do teste
+    reject_h0 = ks_pvalue < alpha
+    test_conclusion = "REJEITAR H₀" if reject_h0 else "NÃO REJEITAR H₀"
+    conclusion_color = "red" if reject_h0 else "green"
+    
+    # Range para CDFs
+    combined_data = np.concatenate([actuals, predictions])
+    x_range = np.linspace(np.min(combined_data), np.max(combined_data), 1000)
+    
+    # ===== SUBPLOT 1: CDFs e Diferença Máxima =====
+    ax1.set_title(f'{title}\nEstatística KS = {ks_statistic:.6f} | p-value = {ks_pvalue:.6f} | {test_conclusion}', 
+                 fontsize=14, fontweight='bold', color=conclusion_color)
+    
+    # Calcular CDFs empíricas
+    cdf_actuals = np.array([np.mean(actuals <= x) for x in x_range])
+    cdf_predictions = np.array([np.mean(predictions <= x) for x in x_range])
+    
+    # Plotar CDFs
+    ax1.plot(x_range, cdf_actuals, 'b-', linewidth=3, label='CDF - Valores Reais', alpha=0.8)
+    ax1.plot(x_range, cdf_predictions, 'r-', linewidth=3, label='CDF - Predições', alpha=0.8)
+    
+    # Encontrar ponto de diferença máxima
+    diff = np.abs(cdf_actuals - cdf_predictions)
+    max_diff_idx = np.argmax(diff)
+    max_diff_x = x_range[max_diff_idx]
+    max_diff_y1 = cdf_actuals[max_diff_idx]
+    max_diff_y2 = cdf_predictions[max_diff_idx]
+    
+    # Destacar diferença máxima
+    ax1.plot([max_diff_x, max_diff_x], [max_diff_y1, max_diff_y2], 
+             'k-', linewidth=4, alpha=0.8, label=f'Diferença Máxima = {ks_statistic:.6f}')
+    ax1.plot(max_diff_x, max_diff_y1, 'bo', markersize=10, markeredgecolor='black', markeredgewidth=2)
+    ax1.plot(max_diff_x, max_diff_y2, 'ro', markersize=10, markeredgecolor='black', markeredgewidth=2)
+    
+    # Área entre as curvas para visualizar diferenças
+    ax1.fill_between(x_range, cdf_actuals, cdf_predictions, alpha=0.2, color='gray', 
+                    label='Diferenças entre CDFs')
+    
+    # Linha vertical no ponto de diferença máxima
+    ax1.axvline(x=max_diff_x, color='black', linestyle='--', alpha=0.6, 
+               label=f'x = {max_diff_x:.4f}')
+    
+    ax1.set_xlabel('Valor', fontsize=12)
+    ax1.set_ylabel('Probabilidade Acumulada', fontsize=12)
+    ax1.legend(fontsize=10, loc='center right')
+    ax1.grid(True, alpha=0.3)
+    
+    # Adicionar caixa de informações do teste
+    info_text = (
+        f"Teste de Kolmogorov-Smirnov (duas amostras)\n"
+        f"H₀: Mesma distribuição de probabilidade\n"
+        f"H₁: Distribuições diferentes\n"
+        f"Nível de significância (α): {alpha}\n"
+        f"Estatística KS: {ks_statistic:.6f}\n"
+        f"p-value: {ks_pvalue:.6f}\n"
+        f"Diferença máxima em x = {max_diff_x:.4f}\n"
+        f"Tamanho amostra real: {len(actuals)}\n"
+        f"Tamanho amostra predição: {len(predictions)}"
+    )
+    
+    ax1.text(0.02, 0.98, info_text, transform=ax1.transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9),
+             verticalalignment='top', fontsize=9, fontfamily='monospace')
+    
+    # ===== SUBPLOT 2: Histogramas Comparativos =====
+    ax2.set_title('Distribuições das Amostras (Histogramas Normalizados)', fontsize=12, fontweight='bold')
+    
+    # Calcular bins compartilhados
+    bins = np.linspace(np.min(combined_data), np.max(combined_data), 50)
+    
+    # Histogramas
+    ax2.hist(actuals, bins=bins, density=True, alpha=0.6, color='blue', 
+            label=f'Valores Reais (n={len(actuals)})', edgecolor='darkblue')
+    ax2.hist(predictions, bins=bins, density=True, alpha=0.6, color='red',
+            label=f'Predições (n={len(predictions)})', edgecolor='darkred')
+    
+    # Adicionar KDE para suavização
+    try:
+        kde_actuals = gaussian_kde(actuals)
+        kde_predictions = gaussian_kde(predictions)
+        
+        kde_x = np.linspace(np.min(combined_data), np.max(combined_data), 200)
+        ax2.plot(kde_x, kde_actuals(kde_x), 'b-', linewidth=2, alpha=0.8, label='KDE - Reais')
+        ax2.plot(kde_x, kde_predictions(kde_x), 'r-', linewidth=2, alpha=0.8, label='KDE - Predições')
+    except:
+        pass
+    
+    # Linha vertical no ponto de diferença máxima
+    ax2.axvline(x=max_diff_x, color='black', linestyle='--', alpha=0.8, linewidth=2,
+               label=f'Diferença máxima (x = {max_diff_x:.4f})')
+    
+    ax2.set_xlabel('Valor', fontsize=12)
+    ax2.set_ylabel('Densidade', fontsize=12)
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3)
+    
+    # Interpretação do resultado
+    if reject_h0:
+        interpretation = (
+            f"CONCLUSÃO: Rejeitamos H₀ (p = {ks_pvalue:.6f} < α = {alpha})\n"
+            f"Há evidência estatística SUFICIENTE de que as distribuições\n"
+            f"das predições e valores reais são DIFERENTES.\n"
+            f"O modelo NÃO reproduz adequadamente a distribuição dos dados."
+        )
+        interp_color = 'lightcoral'
+    else:
+        interpretation = (
+            f"CONCLUSÃO: Não rejeitamos H₀ (p = {ks_pvalue:.6f} ≥ α = {alpha})\n"
+            f"NÃO há evidência estatística suficiente de que as distribuições\n"
+            f"das predições e valores reais sejam diferentes.\n"
+            f"O modelo reproduz adequadamente a distribuição dos dados."
+        )
+        interp_color = 'lightgreen'
+    
+    ax2.text(0.02, 0.98, interpretation, transform=ax2.transAxes, 
+             bbox=dict(boxstyle='round', facecolor=interp_color, alpha=0.9),
+             verticalalignment='top', fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Análise do teste KS salva em: {save_path}")
+    
+    plt.show()
+    
+    # Retornar resultados do teste
+    return {
+        'ks_statistic': ks_statistic,
+        'p_value': ks_pvalue,
+        'reject_h0': reject_h0,
+        'max_diff_location': max_diff_x,
+        'alpha': alpha,
+        'conclusion': test_conclusion
+    }
+
+
+def plot_multi_model_ks_comparison(results_dict, save_path=None, title="Comparação Teste Kolmogorov-Smirnov - Todos os Modelos", alpha=0.05):
+    """
+    Compara resultados do teste de Kolmogorov-Smirnov entre múltiplos modelos
+    """
+    plt.figure(figsize=(16, 10))
+    
+    # Coletar dados dos testes KS
+    models = []
+    ks_statistics = []
+    p_values = []
+    rejections = []
+    
+    for model_name, results in results_dict.items():
+        if 'actuals' in results and 'predictions' in results:
+            actuals = np.array(results['actuals']).flatten()
+            predictions = np.array(results['predictions']).flatten()
+            
+            ks_stat, ks_pval = stats.ks_2samp(predictions, actuals)
+            reject = ks_pval < alpha
+            
+            models.append(model_name)
+            ks_statistics.append(ks_stat)
+            p_values.append(ks_pval)
+            rejections.append(reject)
+    
+    if not models:
+        print("Nenhum modelo encontrado para comparação KS")
+        return
+    
+    # Configurar subplots
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(18, 12))
+    
+    # ===== SUBPLOT 1: Estatísticas KS =====
+    bars1 = ax1.bar(models, ks_statistics, color=['red' if r else 'green' for r in rejections], alpha=0.7)
+    ax1.set_title('Estatísticas KS por Modelo', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Estatística KS', fontsize=10)
+    ax1.tick_params(axis='x', rotation=45)
+    ax1.grid(True, alpha=0.3)
+    
+    # Adicionar valores nas barras
+    for bar, stat in zip(bars1, ks_statistics):
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                f'{stat:.4f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    # ===== SUBPLOT 2: P-values =====
+    bars2 = ax2.bar(models, p_values, color=['red' if r else 'green' for r in rejections], alpha=0.7)
+    ax2.axhline(y=alpha, color='black', linestyle='--', linewidth=2, label=f'α = {alpha}')
+    ax2.set_title('P-values por Modelo', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('p-value', fontsize=10)
+    ax2.tick_params(axis='x', rotation=45)
+    ax2.set_yscale('log')
+    ax2.grid(True, alpha=0.3)
+    ax2.legend()
+    
+    # Adicionar valores nas barras
+    for bar, pval in zip(bars2, p_values):
+        height = bar.get_height()
+        if pval < 0.001:
+            text = f'{pval:.2e}'
+        else:
+            text = f'{pval:.4f}'
+        ax2.text(bar.get_x() + bar.get_width()/2., height * 1.2,
+                text, ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    # ===== SUBPLOT 3: Resultados dos Testes =====
+    reject_counts = [sum(rejections), len(rejections) - sum(rejections)]
+    labels = ['Rejeitam H₀\n(Distribuições Diferentes)', 'Não Rejeitam H₀\n(Distribuições Similares)']
+    colors = ['lightcoral', 'lightgreen']
+    
+    wedges, texts, autotexts = ax3.pie(reject_counts, labels=labels, colors=colors, autopct='%1.1f%%',
+                                      startangle=90)
+    ax3.set_title('Distribuição dos Resultados dos Testes', fontsize=12, fontweight='bold')
+    
+    # ===== SUBPLOT 4: Tabela Resumo =====
+    ax4.axis('off')
+    
+    # Criar dados da tabela
+    table_data = []
+    for i, model in enumerate(models):
+        status = "REJEITA H₀" if rejections[i] else "NÃO REJEITA H₀"
+        status_color = "red" if rejections[i] else "green"
+        table_data.append([
+            model,
+            f'{ks_statistics[i]:.4f}',
+            f'{p_values[i]:.4f}' if p_values[i] >= 0.001 else f'{p_values[i]:.2e}',
+            status
+        ])
+    
+    # Criar tabela
+    col_labels = ['Modelo', 'Estatística KS', 'p-value', 'Resultado']
+    table = ax4.table(cellText=table_data, colLabels=col_labels,
+                     cellLoc='center', loc='center', bbox=[0, 0, 1, 1])
+    
+    # Estilizar tabela
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 2)
+    
+    # Estilizar cabeçalho
+    for i in range(len(col_labels)):
+        table[(0, i)].set_facecolor('#40466e')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Estilizar células
+    for i in range(1, len(table_data) + 1):
+        for j in range(len(col_labels)):
+            if j == 3:  # Coluna de resultado
+                if rejections[i-1]:
+                    table[(i, j)].set_facecolor('#ffcccb')  # Vermelho claro
+                    table[(i, j)].set_text_props(color='darkred', weight='bold')
+                else:
+                    table[(i, j)].set_facecolor('#d4edda')  # Verde claro
+                    table[(i, j)].set_text_props(color='darkgreen', weight='bold')
+            else:
+                if i % 2 == 0:
+                    table[(i, j)].set_facecolor('#f8f9fa')
+                else:
+                    table[(i, j)].set_facecolor('#ffffff')
+    
+    ax4.set_title('Resumo Detalhado dos Testes KS', fontsize=12, fontweight='bold', pad=20)
+    
+    plt.suptitle(title, fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    
+    # Adicionar interpretação geral
+    total_models = len(models)
+    rejected_models = sum(rejections)
+    good_models = total_models - rejected_models
+    
+    interpretation = (
+        f"INTERPRETAÇÃO GERAL:\n"
+        f"• {good_models}/{total_models} modelos reproduzem adequadamente a distribuição dos dados\n"
+        f"• {rejected_models}/{total_models} modelos apresentam distribuições significativamente diferentes\n"
+        f"• Nível de significância utilizado: α = {alpha}"
+    )
+    
+    plt.figtext(0.5, 0.02, interpretation, ha='center', va='bottom', 
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8),
+                fontsize=11, fontweight='bold')
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Comparação KS multi-modelo salva em: {save_path}")
+    
+    plt.show()
+    
+    return {
+        'models': models,
+        'ks_statistics': ks_statistics,
+        'p_values': p_values,
+        'rejections': rejections,
+        'alpha': alpha,
+        'summary': {
+            'total_models': total_models,
+            'models_with_good_distribution': good_models,
+            'models_with_different_distribution': rejected_models
+        }
+    } 
