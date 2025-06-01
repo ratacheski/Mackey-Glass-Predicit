@@ -11,7 +11,7 @@ import time
 # Importar módulos do projeto
 from models import MLPModel, LSTMModel, GRUModel
 from data.mackey_glass_generator import MackeyGlassGenerator, create_dataloaders
-from utils.training import train_model, validate_epoch, predict_sequence, calculate_metrics
+from utils.training import train_model, validate_epoch, calculate_metrics
 from utils import visualization as viz
 from config.config import (
     get_experiment_config, MAIN_MODELS, ALL_MODELS, DEVICE, RANDOM_SEED
@@ -145,40 +145,12 @@ def run_single_experiment(model_name, verbose=True):
     metrics = calculate_metrics(predictions_denorm, actuals_denorm)
     
     if verbose:
-        print(f"\nMÉTRICAS FINAIS:")
+        print(f"\nMÉTRICAS DE VALIDAÇÃO:")
         print(f"MSE: {metrics['MSE']:.6f}")
         print(f"RMSE: {metrics['RMSE']:.6f}")
         print(f"MAE: {metrics['MAE']:.6f}")
         print(f"MAPE: {metrics['MAPE']:.2f}%")
         print(f"R²: {metrics['R²']:.6f}")
-    
-    # Predições sequenciais (10% da série)
-    n_sequential_predictions = int(len(series) * 0.1)
-    train_size = int(len(series) * config['dataset']['train_ratio'])
-    
-    # Usar últimos pontos de treino como sequência inicial
-    initial_sequence = torch.FloatTensor(dataset.normalized_series[train_size-config['dataset']['window_size']:train_size])
-    
-    if verbose:
-        print(f"\nRealizar {n_sequential_predictions} predições sequenciais...")
-    
-    sequential_predictions = predict_sequence(
-        model, initial_sequence, n_sequential_predictions, dataset, config['device']
-    )
-    
-    # Valores reais para comparação
-    actual_sequential = series[train_size:train_size + n_sequential_predictions]
-    
-    # Métricas das predições sequenciais
-    sequential_metrics = calculate_metrics(sequential_predictions, actual_sequential)
-    
-    if verbose:
-        print(f"\nMÉTRICAS DAS PREDIÇÕES SEQUENCIAIS:")
-        print(f"MSE: {sequential_metrics['MSE']:.6f}")
-        print(f"RMSE: {sequential_metrics['RMSE']:.6f}")
-        print(f"MAE: {sequential_metrics['MAE']:.6f}")
-        print(f"MAPE: {sequential_metrics['MAPE']:.2f}%")
-        print(f"R²: {sequential_metrics['R²']:.6f}")
     
     # Retornar resultados
     results = {
@@ -192,11 +164,7 @@ def run_single_experiment(model_name, verbose=True):
         'predictions': predictions_denorm,
         'actuals': actuals_denorm,
         'metrics': metrics,
-        'sequential_predictions': sequential_predictions,
-        'actual_sequential': actual_sequential,
-        'sequential_metrics': sequential_metrics,
         'series': series,
-        'train_size': train_size,
         'dataset': dataset
     }
     
@@ -250,17 +218,6 @@ def run_all_experiments(models_to_run=None, save_results=True, output_dir_prefix
         # Gerar relatório abrangente com o novo sistema
         viz.generate_comprehensive_report(all_results, output_dir)
         
-        # Plotar predições sequenciais para cada modelo usando o novo sistema
-        for model_name, results in all_results.items():
-            viz.plot_sequential_predictions(
-                results['series'],
-                results['train_size'],
-                results['sequential_predictions'],
-                results['actual_sequential'],
-                save_path=f"{output_dir}/{model_name}/sequential_predictions.png",
-                title=f"Predições Sequenciais - {model_name}"
-            )
-        
         print(f"\nRelatório completo gerado em: {output_dir}")
     
     return all_results
@@ -281,16 +238,12 @@ def compare_model_types():
     
     for model_name, result in results.items():
         metrics = result['metrics']
-        seq_metrics = result['sequential_metrics']
         
         print(f"\n{model_name.upper()}:")
         print(f"  Tempo de treinamento: {result['training_time']:.2f}s")
         print(f"  Épocas treinadas: {result['epochs_trained']}")
         print(f"  Parâmetros: {result['model_info']['total_parameters']:,}")
         print(f"  RMSE (validação): {metrics['RMSE']:.6f}")
-        print(f"  RMSE (sequencial): {seq_metrics['RMSE']:.6f}")
-        print(f"  R² (validação): {metrics['R²']:.6f}")
-        print(f"  R² (sequencial): {seq_metrics['R²']:.6f}")
     
     return results
 

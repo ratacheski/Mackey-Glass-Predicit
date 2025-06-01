@@ -137,17 +137,14 @@ Após executar os experimentos, são gerados:
 
 ```
 results/
-└── final_report_<timestamp>/
-    ├── comparison_report.html
-    ├── summary.json
-    ├── mlp/
-    │   ├── model_best.pth
-    │   ├── training_curves.png
-    │   └── sequential_predictions.png
-    ├── lstm/
-    │   └── ...
-    └── gru/
-        └── ...
+├── final_report_[timestamp]/
+│   ├── 01_visao_geral_[timestamp].png
+│   ├── [modelo]/
+│   │   ├── training_history.png
+│   │   └── predictions.png
+│   ├── metrics_comparison.png
+│   ├── metrics_table.csv
+│   └── relatorio.html
 ```
 
 ## Métricas Avaliadas

@@ -88,56 +88,6 @@ def plot_predictions(actuals, predictions, n_show=500, save_path=None,
     plt.close()  # Fechar figura para liberar memória
 
 
-def plot_sequential_predictions(original_series, train_size, predictions, 
-                               actual_test, save_path=None,
-                               title="Predições Sequenciais"):
-    """
-    Plota série original com predições sequenciais
-    
-    Args:
-        original_series: Série temporal original completa
-        train_size: Tamanho do conjunto de treinamento
-        predictions: Predições sequenciais
-        actual_test: Valores reais do conjunto de teste
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
-    """
-    plt.figure(figsize=(15, 8))
-    
-    # Série de treinamento
-    train_series = original_series[:train_size]
-    plt.plot(range(len(train_series)), train_series, 'b-', 
-             label='Dados de Treinamento', alpha=0.7, linewidth=1.5)
-    
-    # Série de teste real
-    test_start = train_size
-    test_indices = range(test_start, test_start + len(actual_test))
-    plt.plot(test_indices, actual_test, 'g-', 
-             label='Valores Reais (Teste)', alpha=0.8, linewidth=2)
-    
-    # Predições
-    pred_indices = range(test_start, test_start + len(predictions))
-    plt.plot(pred_indices, predictions, 'r--', 
-             label='Predições Sequenciais', alpha=0.8, linewidth=2)
-    
-    # Linha divisória
-    plt.axvline(x=train_size, color='black', linestyle=':', alpha=0.8, 
-                label='Início das Predições')
-    
-    plt.title(title)
-    plt.xlabel('Tempo')
-    plt.ylabel('Valor')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    
-    if save_path:
-        ensure_output_dir(save_path)
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Gráfico de predições sequenciais")
-    
-    plt.close()  # Fechar figura para liberar memória
-
-
 def plot_metrics_comparison(results_dict, save_path=None, 
                            title="Comparação de Métricas entre Modelos"):
     """

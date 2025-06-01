@@ -193,44 +193,15 @@ def load_model(model, optimizer, path, device):
     Carrega modelo e otimizador salvos
     """
     checkpoint = torch.load(path, map_location=device)
-    
     model.load_state_dict(checkpoint['model_state_dict'])
-    if optimizer:
+    if optimizer is not None:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     return {
-        'model': model,
-        'optimizer': optimizer,
         'epoch': checkpoint['epoch'],
         'train_losses': checkpoint['train_losses'],
-        'val_losses': checkpoint['val_losses'],
-        'model_info': checkpoint.get('model_info', None)
+        'val_losses': checkpoint['val_losses']
     }
-
-
-def predict_sequence(model, initial_sequence, n_predictions, dataset, device):
-    """
-    Faz predições sequenciais (uma amostra no futuro por vez)
-    """
-    model.eval()
-    predictions = []
-    current_sequence = initial_sequence.clone().to(device)
-    
-    with torch.no_grad():
-        for _ in range(n_predictions):
-            # Fazer predição para o próximo ponto
-            pred = model(current_sequence.unsqueeze(0))
-            predictions.append(pred.item())
-            
-            # Atualizar sequência (sliding window)
-            current_sequence = torch.cat([current_sequence[1:], pred.squeeze().unsqueeze(0)])
-    
-    # Desnormalizar predições
-    predictions = np.array(predictions)
-    if hasattr(dataset, 'denormalize'):
-        predictions = dataset.denormalize(predictions)
-    
-    return predictions
 
 
 def calculate_metrics(predictions, actuals):
@@ -249,7 +220,7 @@ def calculate_metrics(predictions, actuals):
 
     if len(actuals) > 1:
         x_pa = np.roll(actuals, 1)
-        x_pa[0] = actuals[0]  # Evita vazamento de informação no primeiro elemento
+        x_pa[0] = actuals[0]
 
         naive_mse = np.mean((x_pa - actuals) ** 2)
         eqmn2 = mse / naive_mse if naive_mse != 0 else float('inf')

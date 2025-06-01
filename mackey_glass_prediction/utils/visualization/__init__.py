@@ -31,7 +31,6 @@ from .utils import (
 from .basic_plots import (
     plot_training_history,
     plot_predictions,
-    plot_sequential_predictions,
     plot_metrics_comparison,
     save_metrics_table
 )
@@ -81,7 +80,6 @@ __all__ = [
     # Basic plots
     'plot_training_history',
     'plot_predictions',
-    'plot_sequential_predictions',
     'plot_metrics_comparison',
     'save_metrics_table',
     
@@ -130,7 +128,6 @@ def show_available_functions():
     print("\n📈 GRÁFICOS BÁSICOS:")
     print("   • plot_training_history() - Histórico de treinamento")
     print("   • plot_predictions() - Predições vs valores reais")
-    print("   • plot_sequential_predictions() - Predições sequenciais")
     print("   • plot_metrics_comparison() - Comparação de métricas")
     print("   • save_metrics_table() - Salvar tabela de métricas")
     
