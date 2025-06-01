@@ -8,8 +8,7 @@ plt.ioff()  # Desabilitar modo interativo
 
 import numpy as np
 from scipy import stats
-from scipy.stats import jarque_bera, shapiro, normaltest, anderson
-from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.tsa.stattools import acf
 from scipy.stats import gaussian_kde
 from statsmodels.stats.diagnostic import acorr_ljungbox
 import os

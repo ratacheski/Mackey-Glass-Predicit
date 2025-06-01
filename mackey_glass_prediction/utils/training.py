@@ -243,6 +243,18 @@ def calculate_metrics(predictions, actuals):
     
     # MSE (Mean Squared Error)
     mse = np.mean((predictions - actuals) ** 2)
+
+    var_actuals = np.var(actuals)
+    eqmn1 = mse / var_actuals if var_actuals != 0 else float('inf')
+
+    if len(actuals) > 1:
+        x_pa = np.roll(actuals, 1)
+        x_pa[0] = actuals[0]  # Evita vazamento de informação no primeiro elemento
+
+        naive_mse = np.mean((x_pa - actuals) ** 2)
+        eqmn2 = mse / naive_mse if naive_mse != 0 else float('inf')
+    else:
+        eqmn2 = float('inf')
     
     # RMSE (Root Mean Squared Error)
     rmse = np.sqrt(mse)
@@ -338,5 +350,8 @@ def calculate_metrics(predictions, actuals):
         'FDA_Distance': fda_distance,
         # Métricas FDP
         'FDP_L2_Distance': fdp_l2_distance,
-        'FDP_JS_Divergence': js_divergence
+        'FDP_JS_Divergence': js_divergence,
+        # Métricas EQMN
+        'EQMN1': eqmn1,
+        'EQMN2': eqmn2
     } 

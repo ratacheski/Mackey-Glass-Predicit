@@ -25,7 +25,7 @@ def format_metric_value(value, metric_name, context='table'):
     
     Args:
         value: Valor numérico a ser formatado
-        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R², FDA_*, FDP_*, D2_PINBALL_SCORE, MEAN_PINBALL_LOSS)
+        metric_name: Nome da métrica (MSE, EQMN1, EQMN2, RMSE, MAE, MAPE, R², FDA_*, FDP_*, D2_PINBALL_SCORE, MEAN_PINBALL_LOSS)
         context: Contexto da formatação ('table' ou 'display')
     """
     if pd.isna(value) or value is None:
@@ -58,7 +58,7 @@ def format_metric_value(value, metric_name, context='table'):
             return f'{value:.2f}%' if value < 100 else f'{value:.1f}%'
         else:
             return f'{value:.1f}%'
-    elif metric_name in ['MSE', 'RMSE', 'MAE']:
+    elif metric_name in ['MSE', 'RMSE', 'MAE', 'EQMN1', 'EQMN2']:
         # Para valores muito pequenos, usar notação científica
         if abs(value) < 1e-4:
             return f'{value:.2e}'

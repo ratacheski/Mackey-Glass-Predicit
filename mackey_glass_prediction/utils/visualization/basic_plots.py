@@ -154,7 +154,7 @@ def plot_metrics_comparison(results_dict, save_path=None,
     # Preparar dados
     models = list(results_dict.keys())
     # Métricas que serão plotadas
-    metrics = ['MSE', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
+    metrics = ['MSE', 'EQMN1', 'EQMN2', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
     
     # Verificar quais métricas estão disponíveis nos dados
     available_metrics = []
@@ -240,7 +240,7 @@ def save_metrics_table(results_dict, save_path):
     results_dict = validate_and_clean_metrics(results_dict)
     
     # Métricas que serão plotadas (mesmas da plot_metrics_comparison)
-    target_metrics = ['MSE', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
+    target_metrics = ['MSE', 'EQMN1', 'EQMN2', 'R²', 'D2_PINBALL_SCORE', 'MEAN_PINBALL_LOSS']
     
     # Verificar se há modelos disponíveis
     if not results_dict:
