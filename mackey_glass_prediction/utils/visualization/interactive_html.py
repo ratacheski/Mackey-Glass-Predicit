@@ -833,20 +833,28 @@ def get_metric_explanations():
             '''
         },
         'eqmn2': {
-            'name': 'EQMN2 (Erro Quadrático Médio Normalizado - Quadrado da Média)',
+            'name': 'EQMN2 (Erro Quadrático Médio Normalizado - Modelo Naive)',
             'icon': '📉',
             'explanation': '''
-            O EQMN2 normaliza o MSE pelo quadrado da média dos valores reais.
+            O EQMN2 normaliza o MSE pelo MSE de um modelo naive (persistence).
             <br><br>
             <strong>Características:</strong>
             <ul>
-                <li>Normalização alternativa ao EQMN1</li>
-                <li>Útil quando a média é significativa</li>
-                <li>Independente da escala dos dados</li>
-                <li>Valores menores indicam melhor performance</li>
+                <li>Compara com modelo naive que usa valor anterior</li>
+                <li>Ideal para séries temporais</li>
+                <li>Valores < 1 indicam que o modelo supera a persistência</li>
+                <li>Valores > 1 indicam que o modelo é pior que usar valor anterior</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> EQMN2 = MSE / (mean(y_true))²
+            <strong>Fórmula:</strong> EQMN2 = MSE / MSE_naive
+            <br>
+            <strong>Interpretação:</strong>
+            <ul>
+                <li><strong>< 0.5:</strong> Muito superior ao modelo naive</li>
+                <li><strong>0.5-1.0:</strong> Superior ao modelo naive</li>
+                <li><strong>= 1.0:</strong> Equivalente ao modelo naive</li>
+                <li><strong>> 1.0:</strong> Inferior ao modelo naive</li>
+            </ul>
             '''
         }
     }
@@ -862,12 +870,20 @@ def calculate_metrics(actuals, predictions):
     mae = mean_absolute_error(actuals, predictions)
     mape = np.mean(np.abs((actuals - predictions) / actuals)) * 100 if np.all(actuals != 0) else np.nan
     
-    # Calcular EQMN1 e EQMN2
+    # Calcular EQMN1 (MSE normalizado pela variância)
     var_actuals = np.var(actuals)
-    mean_actuals = np.mean(actuals)
-    
     eqmn1 = mse / var_actuals if var_actuals != 0 else np.nan
-    eqmn2 = mse / (mean_actuals ** 2) if mean_actuals != 0 else np.nan
+    
+    # Calcular EQMN2 (MSE normalizado pelo MSE naive/persistence)
+    if len(actuals) > 1:
+        # Modelo naive: usar valor anterior como predição
+        x_pa = np.roll(actuals, 1)
+        x_pa[0] = actuals[0]  # Primeiro valor permanece igual
+        
+        naive_mse = np.mean((x_pa - actuals) ** 2)
+        eqmn2 = mse / naive_mse if naive_mse != 0 else np.nan
+    else:
+        eqmn2 = np.nan
     
     return {
         'r2': r2,
@@ -1169,10 +1185,10 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                     {explanations['eqmn2']['icon']} {explanations['eqmn2']['name']}
                                     <button class="toggle-btn" onclick="toggleExplanation('eqmn2-explanation-{model_name.replace(" ", "_")}')">?</button>
                                 </div>
-                                <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn2'] < 0.1 else '#f39c12' if metrics['eqmn2'] < 0.5 else '#e74c3c'}">
+                                <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn2'] < 0.5 else '#2ecc71' if metrics['eqmn2'] < 1.0 else '#f39c12' if metrics['eqmn2'] < 2.0 else '#e74c3c'}">
                                     {metrics['eqmn2']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor é melhor (normalizado)</div>
+                                <div class="metric-explanation">Menor que 1.0 é melhor (supera modelo naive)</div>
                                 <div id="eqmn2-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['eqmn2']['explanation']}
                                 </div>
