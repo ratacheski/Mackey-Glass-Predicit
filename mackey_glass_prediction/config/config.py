@@ -19,7 +19,7 @@ DATASET_CONFIG = {
     'window_size': 20,        # Tamanho da janela de entrada
     'prediction_steps': 1,    # Número de passos à frente para predizer
     'train_ratio': 0.9,       # Proporção de dados para treino (90%)
-    'batch_size': 2048,         # Tamanho do batch
+    'batch_size': 8192,         # Tamanho do batch
     'shuffle_train': True,    # Embaralhar dados de treino
     'num_workers': 0          # Número de workers para DataLoader
 }
