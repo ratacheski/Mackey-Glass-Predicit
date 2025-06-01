@@ -149,8 +149,8 @@ def plot_metrics_comparison(results_dict, save_path=None,
     
     # Preparar dados
     models = list(results_dict.keys())
-    # Métricas principais (removendo FDA e FDP que têm gráficos dedicados)
-    metrics = ['MSE', 'RMSE', 'MAE', 'MAPE', 'R²']
+    # Métricas que serão plotadas
+    metrics = ['MSE', 'R²']
     
     # Verificar quais métricas estão disponíveis nos dados
     available_metrics = []
@@ -235,12 +235,27 @@ def save_metrics_table(results_dict, save_path):
     # Validar e limpar dados
     results_dict = validate_and_clean_metrics(results_dict)
     
-    # Criar DataFrame
+    # Métricas que serão plotadas (mesmas da plot_metrics_comparison)
+    target_metrics = ['MSE', 'R²']
+    
+    # Verificar se há modelos disponíveis
+    if not results_dict:
+        print("Nenhum modelo encontrado para salvar a tabela de métricas.")
+        return pd.DataFrame()
+    
+    # Criar DataFrame apenas com as métricas especificadas
     data = []
     for model_name, results in results_dict.items():
-        metrics = results['metrics']
+        all_metrics = results['metrics']
         row = {'Modelo': model_name}
-        row.update(metrics)
+        
+        # Adicionar apenas as métricas especificadas
+        for metric in target_metrics:
+            if metric in all_metrics:
+                row[metric] = all_metrics[metric]
+            else:
+                row[metric] = np.nan  # Se métrica não estiver disponível
+        
         data.append(row)
     
     df = pd.DataFrame(data)

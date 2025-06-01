@@ -9,7 +9,7 @@ import os
 from io import StringIO
 
 from .utils import ensure_output_dir, print_save_message, validate_and_clean_metrics, format_metric_value
-from .basic_plots import plot_training_history, plot_predictions, plot_metrics_comparison
+from .basic_plots import plot_training_history, plot_predictions, plot_metrics_comparison, save_metrics_table
 from .distribution_analysis import plot_qq_analysis, plot_cdf_comparison, plot_pdf_comparison
 from .statistical_tests import plot_ks_test_analysis, plot_autocorrelation_analysis
 from .comparison_plots import plot_models_comparison_overview, plot_performance_radar
@@ -151,10 +151,13 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
             print(f"⚠️ Erro no gráfico radar: {e}")
         
         # Tabela de métricas
-        metrics_path = os.path.join(output_dir, f"99_tabela_metricas_{timestamp}.png")
+        metrics_table_path = os.path.join(output_dir, f"99_tabela_metricas_{timestamp}.png")
+        metrics_table_comparison = os.path.join(output_dir, f"99_comparacao_metricas_{timestamp}.png")
         try:
-            plot_metrics_comparison(single_model_results, save_path=metrics_path)
-            generated_files['metrics_table'] = metrics_path
+            plot_metrics_comparison(single_model_results, save_path=metrics_table_comparison)
+            save_metrics_table(single_model_results, metrics_table_path)
+            generated_files['metrics_table'] = metrics_table_path
+            generated_files['metrics_comparison'] = metrics_table_comparison
         except Exception as e:
             print(f"⚠️ Erro na tabela de métricas: {e}")
     
