@@ -6,6 +6,8 @@ import seaborn as sns
 import os
 from scipy import stats
 from scipy.stats import gaussian_kde
+from statsmodels.tsa.stattools import acf
+from statsmodels.graphics.tsaplots import plot_acf
 
 
 # Configurar estilo dos gráficos
@@ -695,6 +697,48 @@ def create_comprehensive_report(results_dict, output_dir):
                     f.write("O modelo reproduz adequadamente a distribuição dos dados.\n")
             
             print(f"Resumo do teste KS salvo em: {ks_summary_path}")
+            
+            # ===== NOVO: ANÁLISE DE AUTOCORRELAÇÃO =====
+            # Análise detalhada da estrutura temporal (autocorrelação)
+            acf_results = plot_autocorrelation_comparison(results['actuals'], results['predictions'],
+                                                        save_path=os.path.join(model_dir, 'autocorrelation_analysis.png'),
+                                                        title=f'Análise de Autocorrelação - {model_name}')
+            
+            # Salvar resultados da autocorrelação em arquivo texto
+            if acf_results:
+                acf_summary_path = os.path.join(model_dir, 'autocorrelation_summary.txt')
+                with open(acf_summary_path, 'w', encoding='utf-8') as f:
+                    f.write(f"ANÁLISE DE AUTOCORRELAÇÃO - {model_name}\n")
+                    f.write("=" * 50 + "\n\n")
+                    f.write("OBJETIVO: Avaliar se o modelo reproduz a estrutura temporal\n")
+                    f.write("(dependência serial) dos valores reais.\n\n")
+                    f.write("MÉTRICAS CALCULADAS:\n")
+                    f.write(f"MSE das Autocorrelações: {acf_results['mse_acf']:.6f}\n")
+                    f.write(f"Correlação entre ACFs: {acf_results['correlation_acf']:.4f}\n")
+                    f.write(f"Diferença máxima: {acf_results['max_difference']:.4f}\n")
+                    f.write(f"Lag da diferença máxima: {acf_results['max_diff_lag']}\n")
+                    if acf_results['ljung_box_pvalue']:
+                        f.write(f"Ljung-Box p-value: {acf_results['ljung_box_pvalue']:.4f}\n")
+                    f.write(f"Número de lags analisados: {len(acf_results['lags'])}\n\n")
+                    
+                    f.write("INTERPRETAÇÃO:\n")
+                    corr_acf = acf_results['correlation_acf']
+                    mse_acf = acf_results['mse_acf']
+                    
+                    if corr_acf > 0.9 and mse_acf < 0.1:
+                        f.write("EXCELENTE: O modelo reproduz muito bem a estrutura temporal dos dados.\n")
+                        f.write("As autocorrelações das predições são muito similares às dos valores reais.\n")
+                    elif corr_acf > 0.7 and mse_acf < 0.2:
+                        f.write("BOM: O modelo reproduz bem a estrutura temporal dos dados.\n")
+                        f.write("Há boa correspondência entre as autocorrelações.\n")
+                    elif corr_acf > 0.5 and mse_acf < 0.4:
+                        f.write("MODERADO: O modelo reproduz parcialmente a estrutura temporal.\n")
+                        f.write("Algumas características da dependência serial são capturadas.\n")
+                    else:
+                        f.write("RUIM: O modelo não reproduz adequadamente a estrutura temporal.\n")
+                        f.write("As predições não preservam a dependência serial dos dados reais.\n")
+                
+                print(f"Resumo da autocorrelação salvo em: {acf_summary_path}")
     
     # 4. Comparação FDA/FDP entre todos os modelos
     print("Gerando comparações distribucionais entre modelos...")
@@ -765,8 +809,91 @@ def create_comprehensive_report(results_dict, output_dir):
     
     print(f"Resumo geral dos testes KS salvo em: {ks_general_summary_path}")
     
+    # ===== NOVO: COMPARAÇÃO AUTOCORRELAÇÃO ENTRE MODELOS =====
+    # Comparação das autocorrelações entre todos os modelos
+    acf_comparison_results = plot_multi_model_autocorrelation_comparison(results_dict,
+                                                                       save_path=os.path.join(comparison_dir, 'all_models_autocorrelation_comparison.png'))
+    
+    # Salvar resumo geral das autocorrelações
+    if acf_comparison_results:
+        acf_general_summary_path = os.path.join(comparison_dir, 'autocorrelation_general_summary.txt')
+        with open(acf_general_summary_path, 'w', encoding='utf-8') as f:
+            f.write("RESUMO GERAL - ANÁLISE DE AUTOCORRELAÇÃO\n")
+            f.write("=" * 50 + "\n\n")
+            f.write("OBJETIVO: Avaliar se as predições de cada modelo reproduzem\n")
+            f.write("a estrutura temporal (dependência serial) dos valores reais.\n\n")
+            f.write("MÉTRICAS UTILIZADAS:\n")
+            f.write("• MSE das ACFs: Erro quadrático médio entre autocorrelações\n")
+            f.write("• Correlação ACFs: Correlação entre funções de autocorrelação\n\n")
+            f.write("RESULTADOS POR MODELO:\n")
+            f.write("-" * 40 + "\n")
+            
+            # Ordenar modelos por qualidade (menor MSE é melhor)
+            sorted_models = sorted(acf_comparison_results.items(), key=lambda x: x[1]['mse_acf'])
+            
+            for rank, (model_name, metrics) in enumerate(sorted_models, 1):
+                f.write(f"\n{rank}º. {model_name}:\n")
+                f.write(f"   MSE das ACFs: {metrics['mse_acf']:.6f}\n")
+                f.write(f"   Correlação ACFs: {metrics['correlation_acf']:.4f}\n")
+                
+                # Classificação da qualidade
+                corr_acf = metrics['correlation_acf']
+                mse_acf = metrics['mse_acf']
+                
+                if corr_acf > 0.9 and mse_acf < 0.1:
+                    quality = "EXCELENTE"
+                elif corr_acf > 0.7 and mse_acf < 0.2:
+                    quality = "BOM"
+                elif corr_acf > 0.5 and mse_acf < 0.4:
+                    quality = "MODERADO"
+                else:
+                    quality = "RUIM"
+                
+                f.write(f"   Avaliação: {quality}\n")
+            
+            f.write(f"\n\nRESUMO ESTATÍSTICO:\n")
+            f.write("-" * 30 + "\n")
+            f.write(f"Total de modelos avaliados: {len(acf_comparison_results)}\n")
+            
+            # Contar por qualidade
+            excellent_count = sum(1 for m in acf_comparison_results.values() 
+                                if m['correlation_acf'] > 0.9 and m['mse_acf'] < 0.1)
+            good_count = sum(1 for m in acf_comparison_results.values() 
+                           if m['correlation_acf'] > 0.7 and m['mse_acf'] < 0.2 
+                           and not (m['correlation_acf'] > 0.9 and m['mse_acf'] < 0.1))
+            moderate_count = sum(1 for m in acf_comparison_results.values() 
+                               if m['correlation_acf'] > 0.5 and m['mse_acf'] < 0.4
+                               and not (m['correlation_acf'] > 0.7 and m['mse_acf'] < 0.2))
+            poor_count = len(acf_comparison_results) - excellent_count - good_count - moderate_count
+            
+            f.write(f"Modelos EXCELENTES: {excellent_count}\n")
+            f.write(f"Modelos BONS: {good_count}\n")
+            f.write(f"Modelos MODERADOS: {moderate_count}\n")
+            f.write(f"Modelos RUINS: {poor_count}\n")
+            
+            best_model = sorted_models[0][0]
+            f.write(f"\nMELHOR MODELO (estrutura temporal): {best_model}\n")
+            f.write(f"MSE: {sorted_models[0][1]['mse_acf']:.6f}\n")
+            f.write(f"Correlação: {sorted_models[0][1]['correlation_acf']:.4f}\n")
+            
+            f.write(f"\n\nINTERPRETAÇÃO GERAL:\n")
+            f.write("-" * 25 + "\n")
+            if excellent_count + good_count > moderate_count + poor_count:
+                f.write("A MAIORIA dos modelos reproduz adequadamente a estrutura temporal.\n")
+                f.write("Isso indica que as predições preservam a dependência serial\n")
+                f.write("dos dados reais, capturando bem as características temporais.\n")
+            elif poor_count > excellent_count + good_count:
+                f.write("A MAIORIA dos modelos NÃO reproduz adequadamente a estrutura temporal.\n")
+                f.write("Isso pode indicar problemas na capacidade dos modelos de capturar\n")
+                f.write("a dependência temporal e padrões sequenciais dos dados.\n")
+            else:
+                f.write("Há desempenho MISTO na reprodução da estrutura temporal.\n")
+                f.write("Alguns modelos capturam bem a dependência serial, outros não.\n")
+        
+        print(f"Resumo geral das autocorrelações salvo em: {acf_general_summary_path}")
+    
     print(f"Relatório completo gerado em: {output_dir}")
-    return df_metrics
+    return df_metrics 
 
 
 def plot_cdf_comparison(actuals, predictions, save_path=None, title="Comparação FDA - Função Distribuição Acumulada"):
@@ -1460,3 +1587,330 @@ def plot_multi_model_ks_comparison(results_dict, save_path=None, title="Compara�
             'models_with_different_distribution': rejected_models
         }
     } 
+
+
+def plot_autocorrelation_comparison(actuals, predictions, save_path=None, 
+                                  title="Comparação de Autocorrelação", 
+                                  max_lags=40, alpha=0.05):
+    """
+    Compara a função de autocorrelação entre valores reais e predições
+    
+    Args:
+        actuals: Valores reais (série temporal)
+        predictions: Predições do modelo (série temporal)
+        save_path: Caminho para salvar o gráfico
+        title: Título do gráfico
+        max_lags: Número máximo de lags para calcular a autocorrelação
+        alpha: Nível de significância para intervalos de confiança
+    """
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(15, 12))
+    
+    # Garantir que são arrays numpy
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
+    
+    # Verificar se as séries têm tamanho suficiente
+    min_length = min(len(actuals), len(predictions))
+    max_lags = min(max_lags, min_length // 4)  # Regra conservadora para lags
+    
+    try:
+        # ===== SUBPLOT 1: Autocorrelação dos Valores Reais =====
+        ax1.set_title(f'Autocorrelação - Valores Reais (n={len(actuals)})', 
+                     fontsize=12, fontweight='bold')
+        
+        # Calcular autocorrelação dos valores reais
+        acf_actuals = acf(actuals, nlags=max_lags, alpha=alpha, fft=True)
+        lags = np.arange(len(acf_actuals[0]))
+        
+        # Plotar autocorrelação
+        ax1.plot(lags, acf_actuals[0], 'b-', linewidth=2, label='ACF - Valores Reais', 
+                marker='o', markersize=4, alpha=0.8)
+        
+        # Adicionar intervalos de confiança
+        if len(acf_actuals) > 1:  # Se intervalos de confiança foram calculados
+            lower_conf = acf_actuals[1][:, 0] - acf_actuals[0]
+            upper_conf = acf_actuals[1][:, 1] - acf_actuals[0]
+            ax1.fill_between(lags, lower_conf, upper_conf, alpha=0.2, color='blue', 
+                           label=f'IC {(1-alpha)*100:.0f}%')
+        
+        # Linha de referência em zero
+        ax1.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        
+        # Linhas de significância estatística (aproximada)
+        significance_line = 1.96 / np.sqrt(len(actuals))
+        ax1.axhline(y=significance_line, color='red', linestyle='--', alpha=0.6, 
+                   label=f'Limite ±{significance_line:.3f}')
+        ax1.axhline(y=-significance_line, color='red', linestyle='--', alpha=0.6)
+        
+        ax1.set_xlabel('Lag', fontsize=10)
+        ax1.set_ylabel('Autocorrelação', fontsize=10)
+        ax1.legend(fontsize=9)
+        ax1.grid(True, alpha=0.3)
+        ax1.set_ylim(-1, 1)
+        
+        # ===== SUBPLOT 2: Autocorrelação das Predições =====
+        ax2.set_title(f'Autocorrelação - Predições (n={len(predictions)})', 
+                     fontsize=12, fontweight='bold')
+        
+        # Calcular autocorrelação das predições
+        acf_predictions = acf(predictions, nlags=max_lags, alpha=alpha, fft=True)
+        
+        # Plotar autocorrelação
+        ax2.plot(lags, acf_predictions[0], 'r-', linewidth=2, label='ACF - Predições', 
+                marker='s', markersize=4, alpha=0.8)
+        
+        # Adicionar intervalos de confiança
+        if len(acf_predictions) > 1:
+            lower_conf = acf_predictions[1][:, 0] - acf_predictions[0]
+            upper_conf = acf_predictions[1][:, 1] - acf_predictions[0]
+            ax2.fill_between(lags, lower_conf, upper_conf, alpha=0.2, color='red', 
+                           label=f'IC {(1-alpha)*100:.0f}%')
+        
+        # Linha de referência e significância
+        ax2.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        significance_line_pred = 1.96 / np.sqrt(len(predictions))
+        ax2.axhline(y=significance_line_pred, color='red', linestyle='--', alpha=0.6, 
+                   label=f'Limite ±{significance_line_pred:.3f}')
+        ax2.axhline(y=-significance_line_pred, color='red', linestyle='--', alpha=0.6)
+        
+        ax2.set_xlabel('Lag', fontsize=10)
+        ax2.set_ylabel('Autocorrelação', fontsize=10)
+        ax2.legend(fontsize=9)
+        ax2.grid(True, alpha=0.3)
+        ax2.set_ylim(-1, 1)
+        
+        # ===== SUBPLOT 3: Comparação Direta =====
+        ax3.set_title('Comparação Direta das Autocorrelações', fontsize=12, fontweight='bold')
+        
+        # Plotar ambas as autocorrelações juntas
+        ax3.plot(lags, acf_actuals[0], 'b-', linewidth=2.5, label='ACF - Valores Reais', 
+                marker='o', markersize=5, alpha=0.8)
+        ax3.plot(lags, acf_predictions[0], 'r--', linewidth=2.5, label='ACF - Predições', 
+                marker='s', markersize=5, alpha=0.8)
+        
+        # Área entre as curvas para mostrar diferenças
+        ax3.fill_between(lags, acf_actuals[0], acf_predictions[0], alpha=0.2, color='gray', 
+                        label='Diferença entre ACFs')
+        
+        # Linhas de referência
+        ax3.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        ax3.axhline(y=significance_line, color='gray', linestyle=':', alpha=0.6, 
+                   label=f'Limite significância ±{significance_line:.3f}')
+        ax3.axhline(y=-significance_line, color='gray', linestyle=':', alpha=0.6)
+        
+        ax3.set_xlabel('Lag', fontsize=10)
+        ax3.set_ylabel('Autocorrelação', fontsize=10)
+        ax3.legend(fontsize=9)
+        ax3.grid(True, alpha=0.3)
+        ax3.set_ylim(-1, 1)
+        
+        # ===== CÁLCULO DE MÉTRICAS COMPARATIVAS =====
+        # Diferença quadrática média entre autocorrelações
+        mse_acf = np.mean((acf_actuals[0] - acf_predictions[0])**2)
+        
+        # Correlação entre as duas funções de autocorrelação
+        corr_acf = np.corrcoef(acf_actuals[0], acf_predictions[0])[0, 1]
+        
+        # Diferença máxima absoluta
+        max_diff_acf = np.max(np.abs(acf_actuals[0] - acf_predictions[0]))
+        max_diff_lag = lags[np.argmax(np.abs(acf_actuals[0] - acf_predictions[0]))]
+        
+        # Teste de Ljung-Box para autocorrelação dos resíduos
+        residuals = predictions - actuals[:len(predictions)] if len(predictions) <= len(actuals) else predictions[:len(actuals)] - actuals
+        try:
+            from statsmodels.stats.diagnostic import acorr_ljungbox
+            ljung_box = acorr_ljungbox(residuals, lags=min(10, len(residuals)//5), return_df=True)
+            ljung_box_pvalue = ljung_box['lb_pvalue'].iloc[-1]  # Último p-value
+        except:
+            ljung_box_pvalue = np.nan
+        
+        # Caixa de métricas no subplot 3
+        metrics_text = (
+            f"MÉTRICAS COMPARATIVAS:\n"
+            f"MSE das ACFs: {mse_acf:.6f}\n"
+            f"Correlação ACFs: {corr_acf:.4f}\n"
+            f"Diferença máxima: {max_diff_acf:.4f}\n"
+            f"Lag da dif. máxima: {max_diff_lag}\n"
+            f"Ljung-Box p-value: {ljung_box_pvalue:.4f}" if not np.isnan(ljung_box_pvalue) else "Ljung-Box: N/A"
+        )
+        
+        ax3.text(0.02, 0.98, metrics_text, transform=ax3.transAxes, 
+                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9),
+                verticalalignment='top', fontsize=9, fontfamily='monospace')
+        
+        # ===== INTERPRETAÇÃO =====
+        # Classificar a qualidade da reprodução da estrutura temporal
+        if corr_acf > 0.9 and mse_acf < 0.1:
+            interpretation = "EXCELENTE: Estrutura temporal muito bem reproduzida"
+            interp_color = 'lightgreen'
+        elif corr_acf > 0.7 and mse_acf < 0.2:
+            interpretation = "BOM: Estrutura temporal bem reproduzida"
+            interp_color = 'lightblue'
+        elif corr_acf > 0.5 and mse_acf < 0.4:
+            interpretation = "MODERADO: Estrutura temporal parcialmente reproduzida"
+            interp_color = 'lightyellow'
+        else:
+            interpretation = "RUIM: Estrutura temporal mal reproduzida"
+            interp_color = 'lightcoral'
+        
+        ax3.text(0.02, 0.02, f"AVALIAÇÃO: {interpretation}", transform=ax3.transAxes, 
+                bbox=dict(boxstyle='round', facecolor=interp_color, alpha=0.9),
+                verticalalignment='bottom', fontsize=10, fontweight='bold')
+        
+        plt.suptitle(title, fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        
+        if save_path:
+            os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Análise de autocorrelação salva em: {save_path}")
+        
+        plt.show()
+        
+        # Retornar métricas
+        return {
+            'acf_reals': acf_actuals[0],
+            'acf_predictions': acf_predictions[0],
+            'lags': lags,
+            'mse_acf': mse_acf,
+            'correlation_acf': corr_acf,
+            'max_difference': max_diff_acf,
+            'max_diff_lag': max_diff_lag,
+            'ljung_box_pvalue': ljung_box_pvalue if not np.isnan(ljung_box_pvalue) else None
+        }
+        
+    except Exception as e:
+        plt.figure(figsize=(10, 6))
+        plt.text(0.5, 0.5, f'Erro ao calcular autocorrelação:\n{str(e)}', 
+                ha='center', va='center', transform=plt.gca().transAxes,
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.8),
+                fontsize=12)
+        plt.title(f"Erro na Análise de Autocorrelação - {title}")
+        plt.axis('off')
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"Erro ao plotar autocorrelação: {e}")
+        return None
+
+
+def plot_multi_model_autocorrelation_comparison(results_dict, save_path=None, 
+                                              title="Comparação Autocorrelação - Todos os Modelos", 
+                                              max_lags=40):
+    """
+    Compara autocorrelações entre múltiplos modelos
+    """
+    plt.figure(figsize=(16, 10))
+    
+    # Cores e estilos para modelos
+    colors = ['red', 'green', 'blue', 'orange', 'purple', 'brown', 'pink', 'gray']
+    linestyles = ['-', '--', '-.', ':', '-', '--', '-.', ':']
+    
+    # Obter valores reais (comum para todos os modelos)
+    actuals_combined = None
+    for model_name, results in results_dict.items():
+        if 'actuals' in results:
+            actuals_combined = np.array(results['actuals']).flatten()
+            break
+    
+    if actuals_combined is None:
+        print("Nenhum dado de valores reais encontrado")
+        return
+    
+    # Ajustar max_lags baseado nos dados
+    max_lags = min(max_lags, len(actuals_combined) // 4)
+    
+    try:
+        # Calcular autocorrelação dos valores reais
+        acf_actuals = acf(actuals_combined, nlags=max_lags, fft=True)
+        lags = np.arange(len(acf_actuals))
+        
+        # Plotar autocorrelação dos valores reais
+        plt.plot(lags, acf_actuals, 'black', linewidth=3, label='Valores Reais', 
+                marker='o', markersize=5, alpha=0.8, zorder=10)
+        
+        # Plotar autocorrelação de cada modelo
+        model_metrics = {}
+        for i, (model_name, results) in enumerate(results_dict.items()):
+            if 'predictions' in results:
+                try:
+                    predictions = np.array(results['predictions']).flatten()
+                    
+                    # Calcular autocorrelação das predições
+                    acf_predictions = acf(predictions, nlags=max_lags, fft=True)
+                    
+                    color = colors[i % len(colors)]
+                    linestyle = linestyles[i % len(linestyles)]
+                    
+                    plt.plot(lags, acf_predictions, color=color, linestyle=linestyle,
+                            linewidth=2, label=f'{model_name}', alpha=0.8,
+                            marker='s', markersize=3)
+                    
+                    # Calcular métricas para este modelo
+                    mse_acf = np.mean((acf_actuals - acf_predictions)**2)
+                    corr_acf = np.corrcoef(acf_actuals, acf_predictions)[0, 1]
+                    
+                    model_metrics[model_name] = {
+                        'mse_acf': mse_acf,
+                        'correlation_acf': corr_acf,
+                        'acf_values': acf_predictions
+                    }
+                    
+                except Exception as e:
+                    print(f"Erro ao processar modelo {model_name}: {e}")
+                    continue
+        
+        # Configurar gráfico
+        plt.title(title, fontsize=16, fontweight='bold')
+        plt.xlabel('Lag', fontsize=12)
+        plt.ylabel('Autocorrelação', fontsize=12)
+        plt.legend(fontsize=10, loc='best', ncol=2)
+        plt.grid(True, alpha=0.3)
+        plt.ylim(-1, 1)
+        
+        # Linhas de referência
+        plt.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        significance_line = 1.96 / np.sqrt(len(actuals_combined))
+        plt.axhline(y=significance_line, color='gray', linestyle=':', alpha=0.6)
+        plt.axhline(y=-significance_line, color='gray', linestyle=':', alpha=0.6)
+        
+        # Adicionar resumo de métricas
+        best_model = min(model_metrics.keys(), key=lambda k: model_metrics[k]['mse_acf'])
+        summary_text = (
+            f"RESUMO COMPARATIVO:\n"
+            f"Modelos avaliados: {len(model_metrics)}\n"
+            f"Melhor modelo (menor MSE): {best_model}\n"
+            f"MSE do melhor: {model_metrics[best_model]['mse_acf']:.6f}\n"
+            f"Correlação do melhor: {model_metrics[best_model]['correlation_acf']:.4f}"
+        )
+        
+        plt.text(0.02, 0.98, summary_text, transform=plt.gca().transAxes, 
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.9),
+                verticalalignment='top', fontsize=10, fontfamily='monospace')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Comparação autocorrelação multi-modelo salva em: {save_path}")
+        
+        plt.show()
+        
+        return model_metrics
+        
+    except Exception as e:
+        plt.text(0.5, 0.5, f'Erro ao gerar comparação de autocorrelação:\n{str(e)}', 
+                ha='center', va='center', transform=plt.gca().transAxes,
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.8))
+        plt.title("Erro na Comparação de Autocorrelação")
+        plt.axis('off')
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"Erro ao plotar comparação de autocorrelação: {e}")
+        return None
