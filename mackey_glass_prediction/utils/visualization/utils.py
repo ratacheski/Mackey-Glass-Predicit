@@ -19,7 +19,7 @@ def format_metric_value(value, metric_name, context='table'):
     
     Args:
         value: Valor numérico a ser formatado
-        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R², FDA_*, FDP_*)
+        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R², FDA_*, FDP_*, D2_PINBALL_LOSS, MEAN_PINBALL_LOSS)
         context: Contexto da formatação ('table' ou 'display')
     """
     if pd.isna(value) or value is None:
@@ -32,6 +32,21 @@ def format_metric_value(value, metric_name, context='table'):
     # Tratamento especial para diferentes métricas
     if metric_name == 'R²':
         return f'{value:.4f}'
+    elif metric_name == 'D2_PINBALL_LOSS':
+        # d2 pinball loss é similar ao R² (pode ser negativo, varia tipicamente entre -∞ e 1)
+        return f'{value:.4f}'
+    elif metric_name == 'MEAN_PINBALL_LOSS':
+        # mean pinball loss é uma métrica de erro (valores menores são melhores)
+        if abs(value) < 1e-4:
+            return f'{value:.2e}'
+        elif abs(value) < 0.01:
+            return f'{value:.6f}'
+        elif abs(value) < 1:
+            return f'{value:.5f}'
+        elif abs(value) < 10:
+            return f'{value:.4f}'
+        else:
+            return f'{value:.3f}'
     elif metric_name == 'MAPE':
         if context == 'table':
             return f'{value:.2f}%' if value < 100 else f'{value:.1f}%'

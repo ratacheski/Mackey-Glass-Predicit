@@ -7,7 +7,7 @@ import os
 from scipy import stats
 from scipy.stats import gaussian_kde
 from scipy.integrate import quad
-
+from sklearn.metrics import mean_pinball_loss, d2_pinball_score
 
 def train_epoch(model, dataloader, criterion, optimizer, device):
     """
@@ -258,6 +258,19 @@ def calculate_metrics(predictions, actuals):
     ss_tot = np.sum((actuals - np.mean(actuals)) ** 2)
     r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
     
+    # === MÉTRICAS PINBALL LOSS ===
+    try:
+        # Mean Pinball Loss (para alpha=0.5, que corresponde à mediana)
+        mean_pinball = mean_pinball_loss(actuals, predictions, alpha=0.5)
+        
+        # D2 Pinball Score (coeficiente de determinação baseado em pinball loss)
+        d2_pinball = d2_pinball_score(actuals, predictions, alpha=0.5)
+        
+    except Exception as e:
+        print(f"Aviso: Erro ao calcular métricas pinball loss: {e}")
+        mean_pinball = float('inf')
+        d2_pinball = -float('inf')
+    
     # === NOVAS MÉTRICAS: FDA e FDP ===
     
     # 1. FDA (Função Distribuição Acumulada) - usando teste Kolmogorov-Smirnov
@@ -316,6 +329,9 @@ def calculate_metrics(predictions, actuals):
         'MAE': mae,
         'MAPE': mape,
         'R²': r2,
+        # Métricas Pinball Loss
+        'MEAN_PINBALL_LOSS': mean_pinball,
+        'D2_PINBALL_SCORE': d2_pinball,
         # Métricas FDA
         'FDA_KS_Statistic': ks_statistic,
         'FDA_KS_PValue': ks_pvalue,
