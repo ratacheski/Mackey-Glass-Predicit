@@ -308,7 +308,7 @@ def save_metrics_table(results_dict, save_path):
                 ha='center', fontsize=10, style='italic')
     
     if save_path:
-        png_path = save_path.replace('.csv', '.png') if save_path.endswith('.csv') else save_path + '.png'
+        png_path = save_path.replace('.csv', '.png') if save_path.endswith('.csv') else (save_path if save_path.endswith('.png') else save_path + '.png')
         ensure_output_dir(png_path)
         plt.savefig(png_path, dpi=300, bbox_inches='tight', facecolor='white', pad_inches=0.2)
         print_save_message(png_path, "Visualização da tabela")
