@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import os
+import platform
+import matplotlib.font_manager as fm
 
 # Configurar estilo dos gráficos
 matplotlib.style.use('ggplot')
@@ -212,4 +214,127 @@ def print_save_message(save_path, description="Gráfico"):
         description: Descrição do que foi salvo
     """
     if save_path:
-        print(f"{description} salvo em: {save_path}") 
+        print(f"{description} salvo em: {save_path}")
+
+
+def setup_emoji_font():
+    """
+    Configura fonte que suporte emojis no matplotlib
+    
+    Returns:
+        bool: True se conseguiu configurar fonte com emojis, False caso contrário
+    """
+    system = platform.system()
+    
+    # Lista de fontes que suportam emojis por sistema
+    emoji_fonts = {
+        'Windows': ['Segoe UI Emoji', 'Microsoft YaHei', 'Malgun Gothic'],
+        'Darwin': ['Apple Color Emoji', 'Arial Unicode MS', 'Menlo'],  # macOS
+        'Linux': ['Noto Color Emoji', 'Noto Emoji', 'DejaVu Sans', 'Liberation Sans']
+    }
+    
+    # Obter lista de fontes disponíveis
+    available_fonts = [f.name for f in fm.fontManager.ttflist]
+    
+    # Tentar encontrar uma fonte compatível
+    fonts_to_try = emoji_fonts.get(system, emoji_fonts['Linux'])  # Linux como fallback
+    
+    for font_name in fonts_to_try:
+        if font_name in available_fonts:
+            try:
+                # Configurar fonte
+                plt.rcParams['font.family'] = [font_name]
+                
+                # Testar se a fonte suporta emojis
+                fig, ax = plt.subplots(figsize=(1, 1))
+                ax.text(0.5, 0.5, '🥇', fontsize=12, ha='center', va='center')
+                plt.close(fig)
+                
+                print(f"✅ Fonte configurada: {font_name} (suporte a emojis)")
+                return True
+            except Exception:
+                continue
+    
+    # Se chegou aqui, não encontrou fonte compatível
+    print("⚠️ Nenhuma fonte com suporte a emojis encontrada, usando texto simples")
+    return False
+
+
+def get_medal_emoji(rank):
+    """
+    Retorna emoji de medalha ou texto baseado no suporte da fonte
+    
+    Args:
+        rank: Posição no ranking (1, 2, 3, ...)
+    
+    Returns:
+        str: Emoji ou texto representando a medalha
+    """
+    if hasattr(get_medal_emoji, '_emoji_supported'):
+        emoji_supported = get_medal_emoji._emoji_supported
+    else:
+        emoji_supported = setup_emoji_font()
+        get_medal_emoji._emoji_supported = emoji_supported
+    
+    if emoji_supported:
+        if rank == 1:
+            return "🥇"
+        elif rank == 2:
+            return "🥈"
+        elif rank == 3:
+            return "🥉"
+        else:
+            return f"{rank}º"
+    else:
+        # Fallback para texto
+        if rank == 1:
+            return "[1º]"
+        elif rank == 2:
+            return "[2º]"
+        elif rank == 3:
+            return "[3º]"
+        else:
+            return f"[{rank}º]"
+
+
+def get_status_emoji(status_type, emoji_supported=None):
+    """
+    Retorna emoji de status ou texto baseado no suporte da fonte
+    
+    Args:
+        status_type: Tipo de status ('good', 'warning', 'bad', 'info')
+        emoji_supported: Se None, detecta automaticamente
+    
+    Returns:
+        str: Emoji ou texto representando o status
+    """
+    if emoji_supported is None:
+        if hasattr(get_status_emoji, '_emoji_supported'):
+            emoji_supported = get_status_emoji._emoji_supported
+        else:
+            emoji_supported = setup_emoji_font()
+            get_status_emoji._emoji_supported = emoji_supported
+    
+    if emoji_supported:
+        status_map = {
+            'good': '✅',
+            'warning': '⚠️',
+            'bad': '❌',
+            'info': 'ℹ️',
+            'excellent': '🟢',
+            'moderate': '🟡',
+            'poor': '🔴'
+        }
+        return status_map.get(status_type, '•')
+    else:
+        # Fallback para texto
+        status_map = {
+            'good': '[OK]',
+            'warning': '[!]',
+            'bad': '[X]',
+            'info': '[i]',
+            'excellent': '[G]',
+            'moderate': '[Y]',
+            'poor': '[R]'
+        }
+        return status_map.get(status_type, '•') 

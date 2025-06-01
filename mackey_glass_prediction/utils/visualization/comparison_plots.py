@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 from .utils import (ensure_output_dir, print_save_message, get_colors_and_styles, 
-                   validate_and_clean_metrics, format_metric_value)
+                   validate_and_clean_metrics, format_metric_value, get_medal_emoji, get_status_emoji)
 
 
 def plot_models_comparison_overview(results_dict, save_path=None,
@@ -141,17 +141,14 @@ def plot_models_comparison_overview(results_dict, save_path=None,
     ranking_text = "RANKING GERAL:\n\n"
     
     for rank, (name, score, metrics) in enumerate(model_scores, 1):
+        medal = get_medal_emoji(rank)
         if rank == 1:
-            medal = "🥇"
             color_bg = 'gold'
         elif rank == 2:
-            medal = "🥈"
             color_bg = 'silver'
         elif rank == 3:
-            medal = "🥉"
             color_bg = '#CD7F32'
         else:
-            medal = f"{rank}º"
             color_bg = 'lightgray'
         
         ranking_text += f"{medal} {name}\n"
@@ -420,14 +417,14 @@ def plot_residuals_comparison(results_dict, save_path=None,
         
         # Análise qualitativa
         if abs(mean_res) < std_res * 0.1 and abs(skew_res) < 0.5 and abs(kurt_res) < 1:
-            quality = "✓ EXCELENTE"
-            quality_color = "🟢"
+            quality = f"{get_status_emoji('good')} EXCELENTE"
+            quality_color = get_status_emoji('excellent')
         elif abs(mean_res) < std_res * 0.2 and abs(skew_res) < 1 and abs(kurt_res) < 2:
-            quality = "⚠ BOM"
-            quality_color = "🟡"
+            quality = f"{get_status_emoji('warning')} BOM"
+            quality_color = get_status_emoji('moderate')
         else:
-            quality = "✗ PROBLEMÁTICO"
-            quality_color = "🔴"
+            quality = f"{get_status_emoji('bad')} PROBLEMÁTICO"
+            quality_color = get_status_emoji('poor')
         
         stats_text += f"{quality_color} {model_name}:\n"
         stats_text += f"  Média: {mean_res:.6f}\n"
@@ -463,7 +460,7 @@ def plot_residuals_comparison(results_dict, save_path=None,
     
     stats_text += "RANKING (Qualidade dos Resíduos):\n"
     for rank, (name, score) in enumerate(residual_scores, 1):
-        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}º"
+        medal = get_medal_emoji(rank)
         stats_text += f"{medal} {name} (Score: {score}/7)\n"
     
     ax4.text(0.05, 0.95, stats_text, transform=ax4.transAxes, fontsize=9,
@@ -654,7 +651,7 @@ def plot_training_comparison(results_dict, save_path=None,
     
     convergence_text += "RANKING (Qualidade de Convergência):\n"
     for rank, (name, score, _) in enumerate(convergence_scores, 1):
-        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}º"
+        medal = get_medal_emoji(rank)
         convergence_text += f"{medal} {name} (Score: {score}/6)\n"
     
     ax4.text(0.05, 0.95, convergence_text, transform=ax4.transAxes, fontsize=9,

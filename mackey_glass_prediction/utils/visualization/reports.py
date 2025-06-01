@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 
-from .utils import ensure_output_dir, print_save_message, validate_and_clean_metrics, format_metric_value
+from .utils import ensure_output_dir, print_save_message, validate_and_clean_metrics, format_metric_value, get_medal_emoji, get_status_emoji
 from .basic_plots import plot_training_history, plot_predictions, plot_metrics_comparison, save_metrics_table
 from .distribution_analysis import plot_qq_analysis, plot_cdf_comparison, plot_pdf_comparison
 from .statistical_tests import plot_ks_test_analysis, plot_autocorrelation_analysis
@@ -276,7 +276,7 @@ def generate_text_report(results_dict, save_path, report_type="comparison"):
             
             f.write("🏆 RANKING GERAL DOS MODELOS:\n\n")
             for rank, (name, score, metrics) in enumerate(rankings, 1):
-                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}º"
+                medal = get_medal_emoji(rank)
                 f.write(f"{medal} {name}\n")
                 f.write(f"    Score total: {score:.4f}\n")
                 f.write(f"    R²: {metrics['r2']:.6f}\n")
@@ -846,7 +846,7 @@ def generate_quick_summary(results_dict, model_name=None):
         model_scores.sort(key=lambda x: x[1], reverse=True)
         summary += "\n🏆 RANKING:\n"
         for rank, (name, score, r2, rmse, mae) in enumerate(model_scores, 1):
-            medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}º"
+            medal = get_medal_emoji(rank)
             summary += f"   {medal} {name} (Score: {score:.2f})\n"
         
         # Recomendação
