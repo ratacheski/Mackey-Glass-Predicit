@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -54,24 +53,6 @@ class MackeyGlassGenerator:
         df = pd.DataFrame({'time': range(len(series)), 'value': series})
         df.to_csv(filename, index=False)
         print(f"Série salva em {filename}")
-    
-    def plot_series(self, series, title="Série Temporal de Mackey-Glass", save_path=None):
-        """
-        Plota a série temporal
-        """
-        plt.figure(figsize=(12, 6))
-        plt.plot(series)
-        plt.title(title)
-        plt.xlabel('Tempo')
-        plt.ylabel('Valor')
-        plt.grid(True)
-        
-        if save_path:
-            plt.savefig(save_path)
-            print(f"Gráfico salvo em {save_path}")
-        
-        plt.show()
-
 
 class MackeyGlassDataset(Dataset):
     """
