@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import os
+from scipy import stats
+from scipy.stats import gaussian_kde
 
 
 # Configurar estilo dos gráficos
@@ -17,7 +19,7 @@ def format_metric_value(value, metric_name, context='table'):
     
     Args:
         value: Valor numérico a ser formatado
-        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R²)
+        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R², FDA_*, FDP_*)
         context: Contexto da formatação ('table' ou 'display')
     """
     if pd.isna(value) or value is None:
@@ -50,6 +52,30 @@ def format_metric_value(value, metric_name, context='table'):
             return f'{value:.3f}'
         else:
             return f'{value:.2f}'
+    elif metric_name.startswith('FDA_'):
+        # Métricas FDA (Função Distribuição Acumulada)
+        if metric_name == 'FDA_KS_PValue':
+            # P-values com mais precisão
+            if value < 0.001:
+                return f'{value:.2e}'
+            else:
+                return f'{value:.4f}'
+        elif metric_name in ['FDA_KS_Statistic', 'FDA_Distance']:
+            # Estatísticas KS e distâncias com 4-6 casas decimais
+            if abs(value) < 0.001:
+                return f'{value:.2e}'
+            else:
+                return f'{value:.6f}'
+    elif metric_name.startswith('FDP_'):
+        # Métricas FDP (Função de Distribuição de Probabilidade)
+        if metric_name in ['FDP_L2_Distance', 'FDP_JS_Divergence']:
+            # Distâncias e divergências com precisão científica se muito pequenas
+            if abs(value) < 1e-4:
+                return f'{value:.2e}'
+            elif abs(value) < 0.01:
+                return f'{value:.6f}'
+            else:
+                return f'{value:.4f}'
     else:
         # Para outras métricas
         if abs(value) < 0.001:
@@ -204,13 +230,33 @@ def plot_metrics_comparison(results_dict, save_path=None,
     
     # Preparar dados
     models = list(results_dict.keys())
+    # Métricas principais (removendo FDA e FDP que agora têm gráficos dedicados)
     metrics = ['MSE', 'RMSE', 'MAE', 'MAPE', 'R²']
     
+    # Verificar quais métricas estão disponíveis nos dados
+    available_metrics = []
+    if models:
+        first_model_metrics = results_dict[models[0]].get('metrics', {})
+        for metric in metrics:
+            if metric in first_model_metrics:
+                available_metrics.append(metric)
+    
+    if not available_metrics:
+        print("Nenhuma métrica encontrada para plotar.")
+        return
+    
+    # Calcular número de subplots necessários
+    n_metrics = len(available_metrics)
+    n_cols = 3
+    n_rows = (n_metrics + n_cols - 1) // n_cols
+    
     # Criar subplots
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(18, 6 * n_rows))
+    if n_rows == 1:
+        axes = axes.reshape(1, -1)
     axes = axes.flatten()
     
-    for i, metric in enumerate(metrics):
+    for i, metric in enumerate(available_metrics):
         values = [results_dict[model]['metrics'][metric] for model in models]
         
         bars = axes[i].bar(models, values, alpha=0.7)
@@ -230,6 +276,7 @@ def plot_metrics_comparison(results_dict, save_path=None,
         # Destacar a melhor barra (apenas se houver valores válidos)
         valid_values = [v for v in values if not (np.isnan(v) or np.isinf(v))]
         if valid_values:
+            # Para R² maior é melhor, para todas as outras métricas menor é melhor
             if metric == 'R²':
                 best_value = max(valid_values)
                 best_idx = values.index(best_value)
@@ -240,8 +287,9 @@ def plot_metrics_comparison(results_dict, save_path=None,
             bars[best_idx].set_color('#28a745')
             bars[best_idx].set_alpha(0.8)
     
-    # Remover subplot extra
-    fig.delaxes(axes[5])
+    # Remover subplots extras
+    for i in range(len(available_metrics), len(axes)):
+        fig.delaxes(axes[i])
     
     plt.suptitle(title, fontsize=16, fontweight='bold')
     plt.tight_layout()
@@ -374,7 +422,7 @@ def save_metrics_table(results_dict, save_path):
             # Ajustar espaçamento
             table[(i, j)].set_text_props(fontsize=9)
             
-            # Destacar melhor modelo (menor valor para MSE, RMSE, MAE, MAPE; maior para R²)
+            # Destacar melhor modelo (menor valor para métricas de erro; maior para R²)
             if j > 0:  # Não aplicar ao nome do modelo
                 metric_name = col_labels[j]
                 values = df[metric_name].values
@@ -385,6 +433,7 @@ def save_metrics_table(results_dict, save_path):
                     valid_values = values[valid_mask]
                     
                     # Encontrar melhor valor
+                    # R² é melhor quando maior; todas as outras métricas são melhores quando menores
                     if metric_name == 'R²':
                         best_value = np.max(valid_values)
                         is_best = abs(df.iloc[i-1][metric_name] - best_value) < 1e-6
@@ -454,6 +503,410 @@ def create_comprehensive_report(results_dict, output_dir):
             plot_prediction_scatter(results['actuals'], results['predictions'],
                                   save_path=os.path.join(model_dir, 'scatter.png'),
                                   title=f'Scatter Plot - {model_name}')
+            
+            # ===== NOVOS GRÁFICOS FDA e FDP =====
+            # Análise distribucional completa (FDA + FDP em uma figura)
+            plot_distribution_analysis(results['actuals'], results['predictions'],
+                                     save_path=os.path.join(model_dir, 'distribution_analysis.png'),
+                                     title_prefix=f'{model_name}')
+            
+            # FDA separado
+            plot_cdf_comparison(results['actuals'], results['predictions'],
+                              save_path=os.path.join(model_dir, 'fda_comparison.png'),
+                              title=f'FDA - {model_name}')
+            
+            # FDP separado
+            plot_pdf_comparison(results['actuals'], results['predictions'],
+                              save_path=os.path.join(model_dir, 'fdp_comparison.png'),
+                              title=f'FDP - {model_name}')
+    
+    # 4. Comparação FDA/FDP entre todos os modelos
+    print("Gerando comparações distribucionais entre modelos...")
+    
+    # Criar diretório para comparações
+    comparison_dir = os.path.join(output_dir, 'distribution_comparisons')
+    os.makedirs(comparison_dir, exist_ok=True)
+    
+    # FDA comparativo
+    plot_multi_model_cdf_comparison(results_dict, 
+                                   save_path=os.path.join(comparison_dir, 'all_models_fda.png'))
+    
+    # FDP comparativo
+    plot_multi_model_pdf_comparison(results_dict,
+                                   save_path=os.path.join(comparison_dir, 'all_models_fdp.png'))
     
     print(f"Relatório completo gerado em: {output_dir}")
-    return df_metrics 
+    return df_metrics
+
+
+def plot_cdf_comparison(actuals, predictions, save_path=None, title="Comparação FDA - Função Distribuição Acumulada"):
+    """
+    Plota comparação das Funções de Distribuição Acumulada (FDA/CDF)
+    """
+    plt.figure(figsize=(12, 8))
+    
+    # Garantir que são arrays numpy
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
+    
+    # Range combinado para avaliação
+    combined_range = np.linspace(
+        min(np.min(predictions), np.min(actuals)),
+        max(np.max(predictions), np.max(actuals)),
+        1000
+    )
+    
+    # Calcular CDFs empíricas
+    cdf_actuals = np.array([np.mean(actuals <= x) for x in combined_range])
+    cdf_predictions = np.array([np.mean(predictions <= x) for x in combined_range])
+    
+    # Plotar CDFs
+    plt.plot(combined_range, cdf_actuals, 'b-', linewidth=2.5, label='Valores Reais', alpha=0.8)
+    plt.plot(combined_range, cdf_predictions, 'r--', linewidth=2.5, label='Predições', alpha=0.8)
+    
+    # Adicionar área entre as curvas
+    plt.fill_between(combined_range, cdf_actuals, cdf_predictions, alpha=0.2, color='gray', label='Diferença')
+    
+    plt.title(title, fontsize=14, fontweight='bold')
+    plt.xlabel('Valor', fontsize=12)
+    plt.ylabel('Probabilidade Acumulada', fontsize=12)
+    plt.legend(fontsize=11)
+    plt.grid(True, alpha=0.3)
+    
+    # Adicionar métricas no gráfico
+    ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
+    fda_distance = np.mean(np.abs(cdf_predictions - cdf_actuals))
+    
+    metrics_text = f'KS Statistic: {ks_statistic:.4f}\nKS p-value: {ks_pvalue:.4f}\nDistância Média: {fda_distance:.4f}'
+    plt.text(0.02, 0.98, metrics_text, transform=plt.gca().transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8),
+             verticalalignment='top', fontsize=10)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Gráfico FDA salvo em: {save_path}")
+    
+    plt.show()
+
+
+def plot_pdf_comparison(actuals, predictions, save_path=None, title="Comparação FDP - Função de Distribuição de Probabilidade"):
+    """
+    Plota comparação das Funções de Distribuição de Probabilidade (FDP/PDF) usando KDE
+    """
+    plt.figure(figsize=(12, 8))
+    
+    # Garantir que são arrays numpy
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
+    
+    try:
+        # Range combinado para avaliação
+        combined_range = np.linspace(
+            min(np.min(predictions), np.min(actuals)),
+            max(np.max(predictions), np.max(actuals)),
+            1000
+        )
+        
+        # Kernel Density Estimation
+        kde_actuals = gaussian_kde(actuals)
+        kde_predictions = gaussian_kde(predictions)
+        
+        # Avaliar PDFs
+        pdf_actuals = kde_actuals(combined_range)
+        pdf_predictions = kde_predictions(combined_range)
+        
+        # Plotar PDFs
+        plt.plot(combined_range, pdf_actuals, 'b-', linewidth=2.5, label='Valores Reais', alpha=0.8)
+        plt.plot(combined_range, pdf_predictions, 'r--', linewidth=2.5, label='Predições', alpha=0.8)
+        
+        # Adicionar área entre as curvas
+        plt.fill_between(combined_range, pdf_actuals, pdf_predictions, alpha=0.2, color='gray', label='Diferença')
+        
+        # Adicionar histogramas normalizados para contexto
+        plt.hist(actuals, bins=50, density=True, alpha=0.3, color='blue', label='Hist. Reais')
+        plt.hist(predictions, bins=50, density=True, alpha=0.3, color='red', label='Hist. Predições')
+        
+        plt.title(title, fontsize=14, fontweight='bold')
+        plt.xlabel('Valor', fontsize=12)
+        plt.ylabel('Densidade de Probabilidade', fontsize=12)
+        plt.legend(fontsize=11)
+        plt.grid(True, alpha=0.3)
+        
+        # Calcular métricas FDP
+        fdp_l2_distance = np.sqrt(np.trapz((pdf_predictions - pdf_actuals)**2, combined_range))
+        
+        # Normalizar PDFs para JS divergence
+        pdf_pred_norm = pdf_predictions / np.trapz(pdf_predictions, combined_range)
+        pdf_actual_norm = pdf_actuals / np.trapz(pdf_actuals, combined_range)
+        pdf_mean = 0.5 * (pdf_pred_norm + pdf_actual_norm)
+        
+        # JS divergence com proteção
+        epsilon = 1e-10
+        kl_pred_mean = np.trapz(pdf_pred_norm * np.log((pdf_pred_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        kl_actual_mean = np.trapz(pdf_actual_norm * np.log((pdf_actual_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        js_divergence = 0.5 * (kl_pred_mean + kl_actual_mean)
+        
+        # Adicionar métricas no gráfico
+        metrics_text = f'Distância L2: {fdp_l2_distance:.4f}\nJS Divergence: {js_divergence:.4f}'
+        plt.text(0.02, 0.98, metrics_text, transform=plt.gca().transAxes, 
+                 bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8),
+                 verticalalignment='top', fontsize=10)
+        
+    except Exception as e:
+        plt.text(0.5, 0.5, f'Erro ao calcular KDE: {str(e)}', 
+                transform=plt.gca().transAxes, ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
+        print(f"Aviso: Erro ao plotar FDP: {e}")
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Gráfico FDP salvo em: {save_path}")
+    
+    plt.show()
+
+
+def plot_distribution_analysis(actuals, predictions, save_path=None, title_prefix="Análise Distribucional"):
+    """
+    Cria análise completa das distribuições (FDA + FDP) em uma única figura
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    
+    # Garantir que são arrays numpy
+    actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
+    
+    # Range combinado
+    combined_range = np.linspace(
+        min(np.min(predictions), np.min(actuals)),
+        max(np.max(predictions), np.max(actuals)),
+        1000
+    )
+    
+    # ===== SUBPLOT 1: FDA/CDF =====
+    ax1.set_title(f'{title_prefix} - FDA (Função Distribuição Acumulada)', fontsize=12, fontweight='bold')
+    
+    # Calcular CDFs empíricas
+    cdf_actuals = np.array([np.mean(actuals <= x) for x in combined_range])
+    cdf_predictions = np.array([np.mean(predictions <= x) for x in combined_range])
+    
+    # Plotar CDFs
+    ax1.plot(combined_range, cdf_actuals, 'b-', linewidth=2.5, label='Valores Reais', alpha=0.8)
+    ax1.plot(combined_range, cdf_predictions, 'r--', linewidth=2.5, label='Predições', alpha=0.8)
+    ax1.fill_between(combined_range, cdf_actuals, cdf_predictions, alpha=0.2, color='gray', label='Diferença')
+    
+    ax1.set_xlabel('Valor', fontsize=10)
+    ax1.set_ylabel('Probabilidade Acumulada', fontsize=10)
+    ax1.legend(fontsize=9)
+    ax1.grid(True, alpha=0.3)
+    
+    # Métricas FDA
+    ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
+    fda_distance = np.mean(np.abs(cdf_predictions - cdf_actuals))
+    metrics_text1 = f'KS: {ks_statistic:.4f}\np-val: {ks_pvalue:.4f}\nDist: {fda_distance:.4f}'
+    ax1.text(0.02, 0.98, metrics_text1, transform=ax1.transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8),
+             verticalalignment='top', fontsize=9)
+    
+    # ===== SUBPLOT 2: FDP/PDF =====
+    ax2.set_title(f'{title_prefix} - FDP (Função de Distribuição de Probabilidade)', fontsize=12, fontweight='bold')
+    
+    try:
+        # Kernel Density Estimation
+        kde_actuals = gaussian_kde(actuals)
+        kde_predictions = gaussian_kde(predictions)
+        
+        # Avaliar PDFs
+        pdf_actuals = kde_actuals(combined_range)
+        pdf_predictions = kde_predictions(combined_range)
+        
+        # Plotar PDFs
+        ax2.plot(combined_range, pdf_actuals, 'b-', linewidth=2.5, label='Valores Reais', alpha=0.8)
+        ax2.plot(combined_range, pdf_predictions, 'r--', linewidth=2.5, label='Predições', alpha=0.8)
+        ax2.fill_between(combined_range, pdf_actuals, pdf_predictions, alpha=0.2, color='gray', label='Diferença')
+        
+        # Histogramas de contexto
+        ax2.hist(actuals, bins=30, density=True, alpha=0.3, color='blue', label='Hist. Reais')
+        ax2.hist(predictions, bins=30, density=True, alpha=0.3, color='red', label='Hist. Predições')
+        
+        ax2.set_xlabel('Valor', fontsize=10)
+        ax2.set_ylabel('Densidade de Probabilidade', fontsize=10)
+        ax2.legend(fontsize=9)
+        ax2.grid(True, alpha=0.3)
+        
+        # Métricas FDP
+        fdp_l2_distance = np.sqrt(np.trapz((pdf_predictions - pdf_actuals)**2, combined_range))
+        
+        # JS divergence
+        pdf_pred_norm = pdf_predictions / np.trapz(pdf_predictions, combined_range)
+        pdf_actual_norm = pdf_actuals / np.trapz(pdf_actuals, combined_range)
+        pdf_mean = 0.5 * (pdf_pred_norm + pdf_actual_norm)
+        
+        epsilon = 1e-10
+        kl_pred_mean = np.trapz(pdf_pred_norm * np.log((pdf_pred_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        kl_actual_mean = np.trapz(pdf_actual_norm * np.log((pdf_actual_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        js_divergence = 0.5 * (kl_pred_mean + kl_actual_mean)
+        
+        metrics_text2 = f'L2: {fdp_l2_distance:.4f}\nJS: {js_divergence:.4f}'
+        ax2.text(0.02, 0.98, metrics_text2, transform=ax2.transAxes, 
+                 bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8),
+                 verticalalignment='top', fontsize=9)
+        
+    except Exception as e:
+        ax2.text(0.5, 0.5, f'Erro KDE: {str(e)}', transform=ax2.transAxes, ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Análise distribucional salva em: {save_path}")
+    
+    plt.show()
+
+
+def plot_multi_model_cdf_comparison(results_dict, save_path=None, title="Comparação FDA - Todos os Modelos"):
+    """
+    Compara Funções de Distribuição Acumulada (FDA/CDF) de múltiplos modelos
+    """
+    plt.figure(figsize=(15, 10))
+    
+    # Cores para diferentes modelos
+    colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+    linestyles = ['-', '--', '-.', ':', '-', '--', '-.', ':']
+    
+    # Encontrar range global
+    all_actuals = []
+    all_predictions = []
+    
+    for model_name, results in results_dict.items():
+        if 'actuals' in results and 'predictions' in results:
+            all_actuals.extend(results['actuals'].flatten())
+            all_predictions.extend(results['predictions'].flatten())
+    
+    global_range = np.linspace(min(all_actuals + all_predictions), 
+                              max(all_actuals + all_predictions), 1000)
+    
+    # Plotar CDF dos valores reais (comum para todos)
+    actuals_combined = np.array(all_actuals)
+    cdf_actuals = np.array([np.mean(actuals_combined <= x) for x in global_range])
+    plt.plot(global_range, cdf_actuals, 'black', linewidth=3, 
+             label='Valores Reais', alpha=0.8, zorder=10)
+    
+    # Plotar CDF das predições de cada modelo
+    for i, (model_name, results) in enumerate(results_dict.items()):
+        if 'predictions' in results:
+            predictions = np.array(results['predictions']).flatten()
+            cdf_predictions = np.array([np.mean(predictions <= x) for x in global_range])
+            
+            color = colors[i % len(colors)]
+            linestyle = linestyles[i % len(linestyles)]
+            
+            plt.plot(global_range, cdf_predictions, color=color, linestyle=linestyle,
+                    linewidth=2.5, label=f'{model_name}', alpha=0.8)
+    
+    plt.title(title, fontsize=16, fontweight='bold')
+    plt.xlabel('Valor', fontsize=12)
+    plt.ylabel('Probabilidade Acumulada', fontsize=12)
+    plt.legend(fontsize=10, loc='best')
+    plt.grid(True, alpha=0.3)
+    
+    # Adicionar texto informativo
+    plt.text(0.02, 0.02, f'Comparação baseada em {len(results_dict)} modelos\nLinha preta: distribuição real', 
+             transform=plt.gca().transAxes, 
+             bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8),
+             fontsize=10, verticalalignment='bottom')
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Comparação FDA multi-modelo salva em: {save_path}")
+    
+    plt.show()
+
+
+def plot_multi_model_pdf_comparison(results_dict, save_path=None, title="Comparação FDP - Todos os Modelos"):
+    """
+    Compara Funções de Distribuição de Probabilidade (FDP/PDF) de múltiplos modelos
+    """
+    plt.figure(figsize=(15, 10))
+    
+    # Cores para diferentes modelos
+    colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+    linestyles = ['-', '--', '-.', ':', '-', '--', '-.', ':']
+    
+    # Encontrar range global
+    all_actuals = []
+    all_predictions = []
+    
+    for model_name, results in results_dict.items():
+        if 'actuals' in results and 'predictions' in results:
+            all_actuals.extend(results['actuals'].flatten())
+            all_predictions.extend(results['predictions'].flatten())
+    
+    global_range = np.linspace(min(all_actuals + all_predictions), 
+                              max(all_actuals + all_predictions), 1000)
+    
+    try:
+        # Plotar PDF dos valores reais (comum para todos)
+        actuals_combined = np.array(all_actuals)
+        kde_actuals = gaussian_kde(actuals_combined)
+        pdf_actuals = kde_actuals(global_range)
+        plt.plot(global_range, pdf_actuals, 'black', linewidth=3, 
+                 label='Valores Reais', alpha=0.8, zorder=10)
+        
+        # Plotar PDF das predições de cada modelo
+        for i, (model_name, results) in enumerate(results_dict.items()):
+            if 'predictions' in results:
+                try:
+                    predictions = np.array(results['predictions']).flatten()
+                    kde_predictions = gaussian_kde(predictions)
+                    pdf_predictions = kde_predictions(global_range)
+                    
+                    color = colors[i % len(colors)]
+                    linestyle = linestyles[i % len(linestyles)]
+                    
+                    plt.plot(global_range, pdf_predictions, color=color, linestyle=linestyle,
+                            linewidth=2.5, label=f'{model_name}', alpha=0.8)
+                except Exception as e:
+                    print(f"Aviso: Erro ao calcular KDE para {model_name}: {e}")
+                    continue
+        
+        plt.title(title, fontsize=16, fontweight='bold')
+        plt.xlabel('Valor', fontsize=12)
+        plt.ylabel('Densidade de Probabilidade', fontsize=12)
+        plt.legend(fontsize=10, loc='best')
+        plt.grid(True, alpha=0.3)
+        
+        # Adicionar histograma dos valores reais para contexto
+        plt.hist(actuals_combined, bins=50, density=True, alpha=0.2, color='black', 
+                label='Hist. Reais', zorder=1)
+        
+        # Adicionar texto informativo
+        plt.text(0.02, 0.98, f'Comparação baseada em {len(results_dict)} modelos\nLinha preta: distribuição real', 
+                 transform=plt.gca().transAxes, 
+                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8),
+                 fontsize=10, verticalalignment='top')
+        
+    except Exception as e:
+        plt.text(0.5, 0.5, f'Erro ao gerar comparação FDP: {str(e)}', 
+                transform=plt.gca().transAxes, ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.8))
+        print(f"Erro ao plotar comparação FDP: {e}")
+    
+    plt.tight_layout()
+    
+    if save_path:
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Comparação FDP multi-modelo salva em: {save_path}")
+    
+    plt.show() 

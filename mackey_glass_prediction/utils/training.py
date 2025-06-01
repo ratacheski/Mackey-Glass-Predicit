@@ -4,6 +4,9 @@ import torch.optim as optim
 from tqdm.auto import tqdm
 import numpy as np
 import os
+from scipy import stats
+from scipy.stats import gaussian_kde
+from scipy.integrate import quad
 
 
 def train_epoch(model, dataloader, criterion, optimizer, device):
@@ -255,10 +258,69 @@ def calculate_metrics(predictions, actuals):
     ss_tot = np.sum((actuals - np.mean(actuals)) ** 2)
     r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
     
+    # === NOVAS MÉTRICAS: FDA e FDP ===
+    
+    # 1. FDA (Função Distribuição Acumulada) - usando teste Kolmogorov-Smirnov
+    ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
+    
+    # Calcular FDA empírica para pontos comuns
+    combined_range = np.linspace(
+        min(np.min(predictions), np.min(actuals)),
+        max(np.max(predictions), np.max(actuals)),
+        100
+    )
+    
+    # CDFs empíricas
+    cdf_predictions = np.array([np.mean(predictions <= x) for x in combined_range])
+    cdf_actuals = np.array([np.mean(actuals <= x) for x in combined_range])
+    
+    # Distância média entre as CDFs
+    fda_distance = np.mean(np.abs(cdf_predictions - cdf_actuals))
+    
+    # 2. FDP (Função de Distribuição de Probabilidade) - usando KDE
+    try:
+        # Kernel Density Estimation para ambas as distribuições
+        kde_predictions = gaussian_kde(predictions)
+        kde_actuals = gaussian_kde(actuals)
+        
+        # Avaliar PDFs nos pontos do range combinado
+        pdf_predictions = kde_predictions(combined_range)
+        pdf_actuals = kde_actuals(combined_range)
+        
+        # Distância entre PDFs (usando distância L2)
+        fdp_l2_distance = np.sqrt(np.trapz((pdf_predictions - pdf_actuals)**2, combined_range))
+        
+        # Divergência Jensen-Shannon entre as PDFs
+        # Normalizar PDFs para que sejam probabilidades válidas
+        pdf_pred_norm = pdf_predictions / np.trapz(pdf_predictions, combined_range)
+        pdf_actual_norm = pdf_actuals / np.trapz(pdf_actuals, combined_range)
+        
+        # PDF média para JS divergence
+        pdf_mean = 0.5 * (pdf_pred_norm + pdf_actual_norm)
+        
+        # Calcular divergência KL com proteção contra log(0)
+        epsilon = 1e-10
+        kl_pred_mean = np.trapz(pdf_pred_norm * np.log((pdf_pred_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        kl_actual_mean = np.trapz(pdf_actual_norm * np.log((pdf_actual_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
+        
+        js_divergence = 0.5 * (kl_pred_mean + kl_actual_mean)
+        
+    except Exception as e:
+        print(f"Aviso: Erro ao calcular métricas FDP: {e}")
+        fdp_l2_distance = float('inf')
+        js_divergence = float('inf')
+    
     return {
         'MSE': mse,
         'RMSE': rmse,
         'MAE': mae,
         'MAPE': mape,
-        'R²': r2
+        'R²': r2,
+        # Métricas FDA
+        'FDA_KS_Statistic': ks_statistic,
+        'FDA_KS_PValue': ks_pvalue,
+        'FDA_Distance': fda_distance,
+        # Métricas FDP
+        'FDP_L2_Distance': fdp_l2_distance,
+        'FDP_JS_Divergence': js_divergence
     } 
