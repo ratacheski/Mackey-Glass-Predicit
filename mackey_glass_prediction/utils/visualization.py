@@ -11,6 +11,91 @@ matplotlib.style.use('ggplot')
 sns.set_palette("husl")
 
 
+def format_metric_value(value, metric_name, context='table'):
+    """
+    Função utilitária para formatação consistente de valores de métricas
+    
+    Args:
+        value: Valor numérico a ser formatado
+        metric_name: Nome da métrica (MSE, RMSE, MAE, MAPE, R²)
+        context: Contexto da formatação ('table' ou 'display')
+    """
+    if pd.isna(value) or value is None:
+        return 'N/A'
+    
+    # Verificar valores extremos
+    if np.isinf(value):
+        return '∞' if value > 0 else '-∞'
+    
+    # Tratamento especial para diferentes métricas
+    if metric_name == 'R²':
+        return f'{value:.4f}'
+    elif metric_name == 'MAPE':
+        if context == 'table':
+            return f'{value:.2f}%' if value < 100 else f'{value:.1f}%'
+        else:
+            return f'{value:.1f}%'
+    elif metric_name in ['MSE', 'RMSE', 'MAE']:
+        # Para valores muito pequenos, usar notação científica
+        if abs(value) < 1e-4:
+            return f'{value:.2e}'
+        # Para valores pequenos, mais casas decimais
+        elif abs(value) < 0.01:
+            return f'{value:.6f}'
+        elif abs(value) < 1:
+            return f'{value:.5f}'
+        elif abs(value) < 10:
+            return f'{value:.4f}'
+        elif abs(value) < 100:
+            return f'{value:.3f}'
+        else:
+            return f'{value:.2f}'
+    else:
+        # Para outras métricas
+        if abs(value) < 0.001:
+            return f'{value:.2e}'
+        elif abs(value) < 1:
+            return f'{value:.4f}'
+        else:
+            return f'{value:.3f}'
+
+
+def validate_and_clean_metrics(results_dict):
+    """
+    Valida e limpa dados de métricas para evitar problemas de formatação
+    
+    Args:
+        results_dict: Dicionário com resultados dos modelos
+        
+    Returns:
+        Dicionário limpo e validado
+    """
+    cleaned_dict = {}
+    
+    for model_name, results in results_dict.items():
+        cleaned_results = results.copy()
+        
+        if 'metrics' in results:
+            cleaned_metrics = {}
+            for metric_name, value in results['metrics'].items():
+                # Limpar valores problemáticos
+                if pd.isna(value) or value is None:
+                    cleaned_value = np.nan
+                elif np.isinf(value):
+                    # Para infinitos, usar um valor muito grande mas finito
+                    cleaned_value = 1e10 if value > 0 else -1e10
+                else:
+                    cleaned_value = float(value)
+                
+                cleaned_metrics[metric_name] = cleaned_value
+            
+            cleaned_results['metrics'] = cleaned_metrics
+        
+        cleaned_dict[model_name] = cleaned_results
+    
+    return cleaned_dict
+
+
 def plot_training_history(train_losses, val_losses, save_path=None, title="Histórico de Treinamento"):
     """
     Plota o histórico de loss de treinamento e validação
@@ -97,8 +182,9 @@ def plot_prediction_scatter(actuals, predictions, save_path=None,
     # Adicionar R²
     from sklearn.metrics import r2_score
     r2 = r2_score(actuals, predictions)
-    plt.text(0.05, 0.95, f'R² = {r2:.4f}', transform=plt.gca().transAxes, 
-             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    r2_formatted = format_metric_value(r2, 'R²')
+    plt.text(0.05, 0.95, f'R² = {r2_formatted}', transform=plt.gca().transAxes, 
+             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8), fontsize=10)
     
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
@@ -113,6 +199,9 @@ def plot_metrics_comparison(results_dict, save_path=None,
     """
     Plota comparação de métricas entre diferentes modelos
     """
+    # Validar e limpar dados
+    results_dict = validate_and_clean_metrics(results_dict)
+    
     # Preparar dados
     models = list(results_dict.keys())
     metrics = ['MSE', 'RMSE', 'MAE', 'MAPE', 'R²']
@@ -125,20 +214,36 @@ def plot_metrics_comparison(results_dict, save_path=None,
         values = [results_dict[model]['metrics'][metric] for model in models]
         
         bars = axes[i].bar(models, values, alpha=0.7)
-        axes[i].set_title(f'{metric}')
+        axes[i].set_title(f'{metric}', fontsize=12, fontweight='bold')
         axes[i].set_ylabel(metric)
         axes[i].tick_params(axis='x', rotation=45)
+        axes[i].grid(True, alpha=0.3)
         
-        # Adicionar valores nas barras
+        # Adicionar valores nas barras com formatação melhorada
         for bar, value in zip(bars, values):
             height = bar.get_height()
-            axes[i].text(bar.get_x() + bar.get_width()/2., height,
-                        f'{value:.4f}', ha='center', va='bottom')
+            formatted_value = format_metric_value(value, metric, context='display')
+            axes[i].text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                        formatted_value, ha='center', va='bottom', 
+                        fontsize=9, fontweight='bold')
+        
+        # Destacar a melhor barra (apenas se houver valores válidos)
+        valid_values = [v for v in values if not (np.isnan(v) or np.isinf(v))]
+        if valid_values:
+            if metric == 'R²':
+                best_value = max(valid_values)
+                best_idx = values.index(best_value)
+            else:
+                best_value = min(valid_values)
+                best_idx = values.index(best_value)
+            
+            bars[best_idx].set_color('#28a745')
+            bars[best_idx].set_alpha(0.8)
     
     # Remover subplot extra
     fig.delaxes(axes[5])
     
-    plt.suptitle(title, fontsize=16)
+    plt.suptitle(title, fontsize=16, fontweight='bold')
     plt.tight_layout()
     
     if save_path:
@@ -195,6 +300,9 @@ def save_metrics_table(results_dict, save_path):
     """
     Salva tabela de métricas em CSV e cria visualização
     """
+    # Validar e limpar dados
+    results_dict = validate_and_clean_metrics(results_dict)
+    
     # Criar DataFrame
     data = []
     for model_name, results in results_dict.items():
@@ -205,17 +313,37 @@ def save_metrics_table(results_dict, save_path):
     
     df = pd.DataFrame(data)
     
-    # Salvar CSV
+    # Salvar CSV com formatação adequada
     csv_path = save_path.replace('.png', '.csv') if save_path.endswith('.png') else save_path + '.csv'
-    df.to_csv(csv_path, index=False)
+    
+    # Formatar dados para CSV
+    df_formatted = df.copy()
+    for col in df.columns:
+        if col != 'Modelo' and df[col].dtype in ['float64', 'float32']:
+            df_formatted[col] = df[col].round(6)
+    
+    df_formatted.to_csv(csv_path, index=False)
     print(f"Tabela de métricas salva em: {csv_path}")
     
     # Criar visualização da tabela
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(14, 8))
     
-    # Configurar tabela
-    table_data = df.round(4).values
-    col_labels = df.columns
+    # Preparar dados da tabela com formatação personalizada
+    table_data = []
+    col_labels = df.columns.tolist()
+    
+    for _, row in df.iterrows():
+        formatted_row = []
+        for col in col_labels:
+            if col == 'Modelo':
+                # Truncar nomes muito longos
+                model_name = str(row[col])
+                if len(model_name) > 15:
+                    model_name = model_name[:12] + '...'
+                formatted_row.append(model_name)
+            else:
+                formatted_row.append(format_metric_value(row[col], col, context='table'))
+        table_data.append(formatted_row)
     
     # Criar tabela
     table = plt.table(cellText=table_data,
@@ -226,22 +354,60 @@ def save_metrics_table(results_dict, save_path):
     
     # Estilizar tabela
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1.2, 2)
+    table.set_fontsize(9)
+    table.scale(1.3, 2.2)
     
     # Destacar cabeçalho
     for i in range(len(col_labels)):
         table[(0, i)].set_facecolor('#40466e')
         table[(0, i)].set_text_props(weight='bold', color='white')
+        
+    # Estilizar células de dados
+    for i in range(1, len(table_data) + 1):
+        for j in range(len(col_labels)):
+            # Alternar cores das linhas
+            if i % 2 == 0:
+                table[(i, j)].set_facecolor('#f8f9fa')
+            else:
+                table[(i, j)].set_facecolor('#ffffff')
+            
+            # Ajustar espaçamento
+            table[(i, j)].set_text_props(fontsize=9)
+            
+            # Destacar melhor modelo (menor valor para MSE, RMSE, MAE, MAPE; maior para R²)
+            if j > 0:  # Não aplicar ao nome do modelo
+                metric_name = col_labels[j]
+                values = df[metric_name].values
+                
+                # Filtrar valores válidos
+                valid_mask = ~(np.isnan(values) | np.isinf(values))
+                if valid_mask.any():
+                    valid_values = values[valid_mask]
+                    
+                    # Encontrar melhor valor
+                    if metric_name == 'R²':
+                        best_value = np.max(valid_values)
+                        is_best = abs(df.iloc[i-1][metric_name] - best_value) < 1e-6
+                    else:
+                        best_value = np.min(valid_values)
+                        is_best = abs(df.iloc[i-1][metric_name] - best_value) < 1e-6
+                    
+                    if is_best and not (np.isnan(df.iloc[i-1][metric_name]) or np.isinf(df.iloc[i-1][metric_name])):
+                        table[(i, j)].set_facecolor('#d4edda')
+                        table[(i, j)].set_text_props(weight='bold', color='#155724')
     
     # Remover eixos
     plt.axis('off')
     plt.title('Comparação de Métricas - Todos os Modelos', 
-              fontsize=14, fontweight='bold', pad=20)
+              fontsize=16, fontweight='bold', pad=30)
+    
+    # Adicionar legenda
+    plt.figtext(0.5, 0.02, 'Células destacadas em verde indicam o melhor desempenho para cada métrica', 
+                ha='center', fontsize=10, style='italic')
     
     if save_path:
         png_path = save_path.replace('.csv', '.png') if save_path.endswith('.csv') else save_path + '.png'
-        plt.savefig(png_path, dpi=300, bbox_inches='tight', facecolor='white')
+        plt.savefig(png_path, dpi=300, bbox_inches='tight', facecolor='white', pad_inches=0.2)
         print(f"Visualização da tabela salva em: {png_path}")
     
     plt.show()
@@ -253,6 +419,9 @@ def create_comprehensive_report(results_dict, output_dir):
     """
     Cria relatório abrangente com todas as visualizações
     """
+    # Validar e limpar dados
+    results_dict = validate_and_clean_metrics(results_dict)
+    
     os.makedirs(output_dir, exist_ok=True)
     
     print("Gerando relatório abrangente...")

@@ -8,12 +8,7 @@ cd mackey_glass_prediction
 pip install -r requirements.txt
 ```
 
-### 2. Testar Instalação
-```bash
-python test_quick.py
-```
-
-### 3. Executar Experimentos
+### 2. Executar Experimentos
 
 #### Todos os modelos principais (recomendado)
 ```bash
@@ -79,7 +74,6 @@ mackey_glass_prediction/
 ├── models/                   # Definições dos modelos
 ├── utils/                    # Funções auxiliares
 ├── experiments/              # Scripts de execução
-├── test_quick.py            # Teste rápido
 ├── requirements.txt         # Dependências
 └── README.md               # Documentação completa
 ```
@@ -119,14 +113,6 @@ pip install torch numpy matplotlib seaborn tqdm scipy scikit-learn pandas
 
 ## 💡 Dicas
 
-1. **Primeiro uso**: Execute `python test_quick.py` para verificar se tudo está funcionando
-2. **Teste rápido**: Use `--no-save` para não gerar arquivos
-3. **Comparação**: Execute todos os modelos para ver a comparação completa
-4. **Personalização**: Modifique `config/config.py` para seus experimentos
-
-## 📞 Suporte
-
-Se encontrar problemas:
-1. Verifique se todas as dependências estão instaladas
-2. Execute o teste rápido primeiro
-3. Verifique os logs de erro para mais detalhes 
+1. **Teste rápido**: Use `--no-save` para não gerar arquivos
+2. **Comparação**: Execute todos os modelos para ver a comparação completa
+3. **Personalização**: Modifique `config/config.py` para seus experimentos

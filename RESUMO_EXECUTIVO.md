@@ -4,7 +4,7 @@
 Implementar e comparar três arquiteturas de redes neurais (MLP, LSTM, GRU) para predição da série temporal Mackey-Glass.
 
 ## ✅ Status do Projeto
-**CONCLUÍDO COM SUCESSO** ✅
+**CONCLUÍDO** ✅
 
 ## 🏆 Principais Resultados
 
@@ -77,4 +77,3 @@ python run_experiment.py
 ---
 **Data**: 29 de Maio de 2025  
 **Status**: ✅ PROJETO CONCLUÍDO  
-**Qualidade**: 🌟🌟🌟🌟🌟 (Excelente) 

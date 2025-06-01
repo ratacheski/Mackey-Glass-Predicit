@@ -1,6 +1,5 @@
 import torch
 
-
 # Configurações gerais
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 RANDOM_SEED = 42
@@ -28,7 +27,7 @@ DATASET_CONFIG = {
 # Configurações de treinamento
 TRAINING_CONFIG = {
     'epochs': 150,
-    'learning_rate': 0.001,
+    'learning_rate': 1e-3,
     'weight_decay': 1e-5,
     'patience': 15,           # Early stopping
     'min_delta': 1e-6,        # Mínima melhoria para considerar progresso
