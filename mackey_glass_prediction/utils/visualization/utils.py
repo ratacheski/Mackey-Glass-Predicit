@@ -1,8 +1,12 @@
 """
-Utilitários para visualização e formatação de métricas
+Utilitários para visualização
 """
-import matplotlib.pyplot as plt
+# Configurar matplotlib ANTES de qualquer outro import
 import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo
+import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
 import numpy as np
 import pandas as pd
 import seaborn as sns

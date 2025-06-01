@@ -1,7 +1,11 @@
 """
 Análises distribucionais: QQ-Plot, FDA (CDF) e FDP (PDF)
 """
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
 import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
 import numpy as np
 from scipy import stats
 from scipy.stats import gaussian_kde
@@ -171,9 +175,9 @@ def plot_qq_analysis(actuals, predictions, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "QQ-Plot")
+        print_save_message(save_path, "Análise Q-Q")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     # Retornar métricas do QQ-plot
     return {
@@ -243,9 +247,9 @@ def plot_cdf_comparison(actuals, predictions, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Gráfico FDA")
+        print_save_message(save_path, "Comparação FDA")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_pdf_comparison(actuals, predictions, save_path=None, 
@@ -329,9 +333,9 @@ def plot_pdf_comparison(actuals, predictions, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Gráfico FDP")
+        print_save_message(save_path, "Comparação FDP")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_distribution_analysis(actuals, predictions, save_path=None, 
@@ -436,9 +440,9 @@ def plot_distribution_analysis(actuals, predictions, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Análise distribucional")
+        print_save_message(save_path, "Análise de distribuições")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_multi_model_cdf_comparison(results_dict, save_path=None, 
@@ -500,9 +504,9 @@ def plot_multi_model_cdf_comparison(results_dict, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação FDA multi-modelo")
+        print_save_message(save_path, "Comparação FDA múltiplos modelos")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_multi_model_pdf_comparison(results_dict, save_path=None, 
@@ -581,6 +585,6 @@ def plot_multi_model_pdf_comparison(results_dict, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação FDP multi-modelo")
+        print_save_message(save_path, "Comparação FDP múltiplos modelos")
     
-    plt.show() 
+    plt.close()  # Fechar figura para liberar memória 

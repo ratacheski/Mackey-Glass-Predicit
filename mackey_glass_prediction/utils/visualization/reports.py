@@ -1,11 +1,15 @@
 """
-Geração de relatórios abrangentes
+Geração de relatórios abrangentes com múltiplas visualizações
 """
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
 import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
+import os
+from datetime import datetime
 import numpy as np
 import pandas as pd
-from datetime import datetime
-import os
 from io import StringIO
 
 from .utils import ensure_output_dir, print_save_message, validate_and_clean_metrics, format_metric_value

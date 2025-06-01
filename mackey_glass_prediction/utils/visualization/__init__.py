@@ -10,6 +10,14 @@ Este pacote contém módulos especializados para diferentes tipos de visualizaç
 - reports: Geração de relatórios abrangentes
 """
 
+# Configurar matplotlib para não exibir gráficos na tela
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
+import matplotlib.pyplot as plt
+
+# Configurações adicionais para melhor qualidade e desempenho
+plt.ioff()  # Desabilitar modo interativo
+
 # Imports principais de cada módulo
 from .utils import (
     format_metric_value,

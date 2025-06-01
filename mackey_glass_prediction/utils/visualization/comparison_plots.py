@@ -1,7 +1,11 @@
 """
 Gráficos de comparação entre modelos
 """
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
 import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -34,7 +38,7 @@ def plot_models_comparison_overview(results_dict, save_path=None,
             ensure_output_dir(save_path)
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print_save_message(save_path, "Comparação de modelos")
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     colors, _ = get_colors_and_styles(len(clean_results))
@@ -187,7 +191,7 @@ def plot_models_comparison_overview(results_dict, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Comparação de modelos")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     return {
         'rankings': model_scores,
@@ -214,7 +218,7 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
         plt.text(0.5, 0.5, 'Dados insuficientes para comparação', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     n_models = len(clean_results)
@@ -299,7 +303,7 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Comparação de predições")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_residuals_comparison(results_dict, save_path=None,
@@ -319,7 +323,7 @@ def plot_residuals_comparison(results_dict, save_path=None,
         plt.text(0.5, 0.5, 'Dados insuficientes para comparação', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
@@ -473,7 +477,7 @@ def plot_residuals_comparison(results_dict, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Comparação de resíduos")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     return {
         'residuals_statistics': {name: {
@@ -507,7 +511,7 @@ def plot_training_comparison(results_dict, save_path=None,
         plt.text(0.5, 0.5, 'Dados de treinamento não disponíveis', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
@@ -664,7 +668,7 @@ def plot_training_comparison(results_dict, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Comparação de treinamento")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     return {
         'convergence_analysis': {name: metrics for name, score, metrics in convergence_scores},
@@ -689,7 +693,7 @@ def plot_performance_radar(results_dict, save_path=None,
         plt.text(0.5, 0.5, 'Dados insuficientes para gráfico radar', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     # Calcular métricas normalizadas
@@ -718,7 +722,7 @@ def plot_performance_radar(results_dict, save_path=None,
         plt.text(0.5, 0.5, 'Não foi possível calcular métricas', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return
     
     # Normalizar métricas (0-1, onde 1 é melhor)
@@ -794,7 +798,7 @@ def plot_performance_radar(results_dict, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Gráfico radar")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     # Calcular score total de cada modelo
     total_scores = {}

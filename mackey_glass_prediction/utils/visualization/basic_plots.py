@@ -1,7 +1,11 @@
 """
 Gráficos básicos para visualização de treinamento e predições
 """
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
 import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -39,7 +43,7 @@ def plot_training_history(train_losses, val_losses, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Gráfico de treinamento")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_predictions(actuals, predictions, n_show=500, save_path=None, 
@@ -81,7 +85,7 @@ def plot_predictions(actuals, predictions, n_show=500, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Gráfico de predições")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_sequential_predictions(original_series, train_size, predictions, 
@@ -131,7 +135,7 @@ def plot_sequential_predictions(original_series, train_size, predictions,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Gráfico de predições sequenciais")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def plot_metrics_comparison(results_dict, save_path=None, 
@@ -218,7 +222,7 @@ def plot_metrics_comparison(results_dict, save_path=None,
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print_save_message(save_path, "Comparação de métricas")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
 
 
 def save_metrics_table(results_dict, save_path):
@@ -359,6 +363,6 @@ def save_metrics_table(results_dict, save_path):
         plt.savefig(png_path, dpi=300, bbox_inches='tight', facecolor='white', pad_inches=0.2)
         print_save_message(png_path, "Visualização da tabela")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     return df 

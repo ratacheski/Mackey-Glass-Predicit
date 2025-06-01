@@ -1,7 +1,11 @@
 """
 Testes estatísticos: Kolmogorov-Smirnov e análise de autocorrelação
 """
+import matplotlib
+matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
 import matplotlib.pyplot as plt
+plt.ioff()  # Desabilitar modo interativo
+
 import numpy as np
 from scipy import stats
 from scipy.stats import jarque_bera, shapiro, normaltest, anderson
@@ -156,9 +160,9 @@ def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Teste de 
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Teste KS")
+        print_save_message(save_path, "Teste Kolmogorov-Smirnov")
     
-    plt.show()
+    plt.close()  # Fechar figura para liberar memória
     
     # Retornar resultados do teste
     return {
@@ -346,7 +350,7 @@ def plot_autocorrelation_analysis(actuals, predictions, save_path=None,
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print_save_message(save_path, "Análise de autocorrelação")
         
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         
         # Retornar métricas
         return {
@@ -373,5 +377,5 @@ def plot_autocorrelation_analysis(actuals, predictions, save_path=None,
             ensure_output_dir(save_path)
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()  # Fechar figura para liberar memória
         return None 
