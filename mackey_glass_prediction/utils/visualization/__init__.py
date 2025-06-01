@@ -39,9 +39,7 @@ from .distribution_analysis import (
 
 from .statistical_tests import (
     plot_ks_test_analysis,
-    plot_autocorrelation_analysis,
-    plot_residuals_autocorrelation,
-    compare_statistical_tests
+    plot_autocorrelation_analysis
 )
 
 from .comparison_plots import (
@@ -90,8 +88,6 @@ __all__ = [
     # Statistical tests
     'plot_ks_test_analysis',
     'plot_autocorrelation_analysis',
-    'plot_residuals_autocorrelation',
-    'compare_statistical_tests',
     
     # Comparison plots
     'plot_models_comparison_overview',
@@ -141,8 +137,6 @@ def show_available_functions():
     print("\n🔬 TESTES ESTATÍSTICOS:")
     print("   • plot_ks_test_analysis() - Teste Kolmogorov-Smirnov")
     print("   • plot_autocorrelation_analysis() - Análise autocorrelação")
-    print("   • plot_residuals_autocorrelation() - Autocorrelação resíduos")
-    print("   • compare_statistical_tests() - Comparar testes")
     
     print("\n🆚 COMPARAÇÃO DE MODELOS:")
     print("   • plot_models_comparison_overview() - Visão geral comparativa")

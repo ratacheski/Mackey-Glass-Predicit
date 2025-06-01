@@ -102,7 +102,7 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
         except Exception as e:
             print(f"⚠️ Erro no Q-Q plot para {model_name}: {e}")
         
-        # Análise de distribuições (CDF e FDP)
+        # Análise de distribuições (CDF e PDF)
         cdf_path = os.path.join(output_dir, f"{model_prefix}_cdf_{timestamp}.png")
         try:
             plot_cdf_comparison(results['actuals'], results['predictions'], 
@@ -129,10 +129,10 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
             print(f"⚠️ Erro no teste KS para {model_name}: {e}")
         
         # Análise de autocorrelação (se existir série temporal)
-        if 'series' in results:
+        if 'actuals' in results and 'predictions' in results:
             autocorr_path = os.path.join(output_dir, f"{model_prefix}_autocorrelacao_{timestamp}.png")
             try:
-                plot_autocorrelation_analysis(results['series'], 
+                plot_autocorrelation_analysis(results['actuals'], results['predictions'], 
                                              save_path=autocorr_path, title=f"Análise de Autocorrelação - {model_name}")
                 generated_files[f'autocorr_{model_name}'] = autocorr_path
             except Exception as e:
@@ -736,7 +736,7 @@ def generate_html_report(results_dict, generated_files, save_path, report_type="
                     <p>As análises estatísticas detalhadas incluem:</p>
                     <ul>
                         <li><strong>Q-Q Plot:</strong> Comparação das distribuições dos resíduos com a distribuição normal</li>
-                        <li><strong>CDF/FDP:</strong> Análise das funções de distribuição empíricas</li>
+                        <li><strong>FDA/FDP:</strong> Análise das funções de distribuição empíricas</li>
                         <li><strong>Teste KS:</strong> Teste de Kolmogorov-Smirnov para comparação de distribuições</li>
                         <li><strong>Autocorrelação:</strong> Análise da dependência temporal (quando aplicável)</li>
                     </ul>
