@@ -1,34 +1,34 @@
 #!/bin/bash
 
-# 🌐 Script de Configuração Automática do GitHub Pages
-# Trabalho 2 RNP - Predição Mackey-Glass
-# Autor: Rafael Ratacheski de Sousa Raulino
+# 🌐 GitHub Pages Automatic Setup Script
+# Work 2 RNP - Mackey-Glass Prediction
+# Author: Rafael Ratacheski de Sousa Raulino
 
-echo "🌐 Configurando GitHub Pages para Trabalho 2 RNP..."
+echo "🌐 Setting up GitHub Pages for Work 2 RNP..."
 echo "=" * 60
-echo "📝 Desenvolvido por: Rafael Ratacheski de Sousa Raulino"
-echo "🎓 Mestrando em Engenharia Elétrica e de Computação - UFG"
-echo "📚 Disciplina: Redes Neurais Profundas - 2025/1"
+echo "📝 Developed by: Rafael Ratacheski de Sousa Raulino"
+echo "🎓 MSc Student in Electrical and Computer Engineering - UFG"
+echo "📚 Course: Deep Neural Networks - 2025/1"
 echo "=" * 60
 
-# Verificar se estamos no diretório correto
+# Check if we are in the correct directory
 if [ ! -d "mackey_glass_prediction" ]; then
-    echo "❌ Erro: Execute este script a partir da raiz do projeto (onde está a pasta mackey_glass_prediction)"
+    echo "❌ Error: Run this script from the project root (where the mackey_glass_prediction folder is located)"
     exit 1
 fi
 
-# Criar estrutura do GitHub Pages
-echo "📁 Criando estrutura do GitHub Pages..."
+# Create GitHub Pages structure
+echo "📁 Creating GitHub Pages structure..."
 mkdir -p docs/images
 mkdir -p docs/css
 mkdir -p docs/js
 
-# Encontrar pasta de resultados mais recente
+# Find the most recent results folder
 RESULTS_DIR=$(find mackey_glass_prediction/experiments/results -name "final_report_*" -type d | sort | tail -1)
 
 if [ -z "$RESULTS_DIR" ]; then
-    echo "❌ Nenhuma pasta de resultados encontrada!"
-    echo "💡 Execute primeiro:"
+    echo "❌ No results folder found!"
+    echo "💡 First run:"
     echo "   cd mackey_glass_prediction/experiments"
     echo "   python run_experiment.py"
     echo "   cd ../.."
@@ -36,111 +36,111 @@ if [ -z "$RESULTS_DIR" ]; then
     exit 1
 fi
 
-echo "📁 Copiando resultados de: $RESULTS_DIR"
+echo "📁 Copying results from: $RESULTS_DIR"
 
-# Copiar arquivos de resultados
-echo "📊 Copiando imagens e relatórios..."
+# Copy results files
+echo "📊 Copying images and reports..."
 cp -r "$RESULTS_DIR"/* docs/images/ 2>/dev/null || true
 
-# Copiar relatório HTML principal
-if [ -f "$RESULTS_DIR/relatorio.html" ]; then
-    cp "$RESULTS_DIR/relatorio.html" docs/relatorio.html
-    echo "✅ Relatório HTML copiado"
+# Copy main HTML report
+if [ -f "$RESULTS_DIR/report.html" ]; then
+    cp "$RESULTS_DIR/report.html" docs/report.html
+    echo "✅ HTML report copied"
 else
-    # Tentar gerar relatório se não existir
-    echo "📄 Relatório HTML não encontrado. Gerando..."
+    # Try to generate report if it doesn't exist
+    echo "📄 HTML report not found. Generating..."
     cd mackey_glass_prediction
     python generate_interactive_report.py
     cd ..
     
-    # Tentar novamente
-    if [ -f "$RESULTS_DIR/relatorio.html" ]; then
-        cp "$RESULTS_DIR/relatorio.html" docs/relatorio.html
-        echo "✅ Relatório HTML gerado e copiado"
+    # Try again
+    if [ -f "$RESULTS_DIR/report.html" ]; then
+        cp "$RESULTS_DIR/report.html" docs/report.html
+        echo "✅ HTML report generated and copied"
     else
-        echo "⚠️ Não foi possível encontrar/gerar o relatório HTML"
+        echo "⚠️ Could not find/generate HTML report"
     fi
 fi
 
-# Ajustar caminhos no HTML - Versão Melhorada
-if [ -f "docs/relatorio.html" ]; then
-    echo "🔧 Usando script otimizado para correção de caminhos..."
+# Adjust paths in HTML - Improved Version
+if [ -f "docs/report.html" ]; then
+    echo "🔧 Using optimized script for path correction..."
     
-    # Verificar se o script de correção existe
+    # Check if the correction script exists
     if [ -f "fix_image_paths.sh" ]; then
-        echo "✅ Executando fix_image_paths.sh..."
+        echo "✅ Running fix_image_paths.sh..."
         chmod +x fix_image_paths.sh
         ./fix_image_paths.sh
     else
-        echo "⚠️ Script fix_image_paths.sh não encontrado!"
-        echo "🔧 Usando método básico (só corrige src, não onclick)..."
+        echo "⚠️ Script fix_image_paths.sh not found!"
+        echo "🔧 Using basic method (only fixes src, not onclick)..."
         
-        # Backup do arquivo original
-        cp docs/relatorio.html docs/relatorio.html.backup
+        # Backup the original file
+        cp docs/report.html docs/report.html.backup
         
-        # Debug: mostrar alguns exemplos de caminhos antes da conversão
-        echo "🔍 Exemplo de caminhos encontrados:"
-        grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/relatorio.html | head -3
+        # Debug: show some path examples before conversion
+        echo "🔍 Example paths found:"
+        grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/report.html | head -3
         
-        # Estratégia Principal: Substituir arquivos diretos (sem pasta)
-        # Exemplo: src="arquivo.png" -> src="images/arquivo.png"
-        echo "🔄 Aplicando correção principal para arquivos diretos..."
-        sed -i 's@src="\([^"/]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1"@g' docs/relatorio.html
+        # Main Strategy: Replace direct files (without folder)
+        # Example: src="arquivo.png" -> src="images/arquivo.png"
+        echo "🔄 Applying main correction for direct files..."
+        sed -i 's@src="\([^"/]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1"@g' docs/report.html
         
-        # Estratégia 2: Para arquivos que já podem ter uma pasta
-        # Exemplo: src="pasta/arquivo.png" -> src="images/pasta/arquivo.png"
-        sed -i 's@src="\([^"]*[^/]\)/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1/\2"@g' docs/relatorio.html
+        # Strategy 2: For files that may already have a folder
+        # Example: src="pasta/arquivo.png" -> src="images/pasta/arquivo.png"
+        sed -i 's@src="\([^"]*[^/]\)/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1/\2"@g' docs/report.html
         
-        # Estratégia 3: Para caminhos absolutos
-        # Exemplo: src="/caminho/arquivo.png" -> src="images/caminho/arquivo.png"
-        sed -i 's@src="/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1"@g' docs/relatorio.html
+        # Strategy 3: For absolute paths
+        # Example: src="/caminho/arquivo.png" -> src="images/caminho/arquivo.png"
+        sed -i 's@src="/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)\)"@src="images/\1"@g' docs/report.html
         
-        # Aplicar o mesmo para href (links para arquivos)
-        echo "🔗 Corrigindo links href..."
-        sed -i 's@href="\([^"/]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1"@g' docs/relatorio.html
-        sed -i 's@href="\([^"]*[^/]\)/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1/\2"@g' docs/relatorio.html
-        sed -i 's@href="/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1"@g' docs/relatorio.html
+        # Apply the same for href (links to files)
+        echo "🔗 Fixing href links..."
+        sed -i 's@href="\([^"/]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1"@g' docs/report.html
+        sed -i 's@href="\([^"]*[^/]\)/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1/\2"@g' docs/report.html
+        sed -i 's@href="/\([^"]*\.\(png\|jpg\|jpeg\|gif\|svg\|csv\|txt\)\)"@href="images/\1"@g' docs/report.html
         
-        # Corrigir duplicações que podem ter ocorrido
-        echo "🧹 Removendo duplicações..."
-        sed -i 's@images/images/@images/@g' docs/relatorio.html
-        sed -i 's@src="images/images/@src="images/@g' docs/relatorio.html
-        sed -i 's@href="images/images/@href="images/@g' docs/relatorio.html
+        # Fix duplications that may have occurred
+        echo "🧹 Removing duplications..."
+        sed -i 's@images/images/@images/@g' docs/report.html
+        sed -i 's@src="images/images/@src="images/@g' docs/report.html
+        sed -i 's@href="images/images/@href="images/@g' docs/report.html
         
-        # Debug: mostrar alguns exemplos após a conversão
-        echo "🔄 Exemplo de caminhos após conversão:"
-        grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/relatorio.html | head -3
+        # Debug: show some examples after conversion
+        echo "🔄 Example paths after conversion:"
+        grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/report.html | head -3
         
-        # Verificar se houve mudanças comparando com backup
-        if ! diff -q docs/relatorio.html.backup docs/relatorio.html > /dev/null; then
-            echo "✅ Caminhos ajustados com sucesso (método básico)"
+        # Check if there were changes by comparing with backup
+        if ! diff -q docs/report.html.backup docs/report.html > /dev/null; then
+            echo "✅ Paths adjusted successfully (basic method)"
             
-            # Mostrar estatísticas
-            total_imgs=$(grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/relatorio.html | wc -l)
-            correct_imgs=$(grep -o 'src="images/[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/relatorio.html | wc -l)
-            echo "📊 Estatísticas: $correct_imgs/$total_imgs imagens com caminhos corretos"
-            echo "⚠️ Nota: Este método não corrige eventos onclick!"
-            echo "💡 Para correção completa, execute: ./fix_image_paths.sh"
+            # Show statistics
+            total_imgs=$(grep -o 'src="[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/report.html | wc -l)
+            correct_imgs=$(grep -o 'src="images/[^"]*\.\(png\|jpg\|jpeg\|gif\|svg\)"' docs/report.html | wc -l)
+            echo "📊 Statistics: $correct_imgs/$total_imgs images with correct paths"
+            echo "⚠️ Note: This method does not fix onclick events!"
+            echo "💡 For complete correction, run: ./fix_image_paths.sh"
             
-            rm docs/relatorio.html.backup
+            rm docs/report.html.backup
         else
-            echo "⚠️ Nenhuma alteração foi feita nos caminhos"
-            echo "💡 Verifique se os caminhos já estão corretos ou execute:"
+            echo "⚠️ No changes were made to the paths"
+            echo "💡 Check if paths are already correct or run:"
             echo "   ./debug_image_paths.sh"
-            rm docs/relatorio.html.backup
+            rm docs/report.html.backup
         fi
     fi
 fi
 
-# Criar página principal (index.html)
-echo "🏠 Criando página principal..."
+# Create main page (index.html)
+echo "🏠 Creating main page..."
 cat > docs/index.html << 'EOF'
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trabalho 2 RNP - Predição Mackey-Glass</title>
+    <title>Work 2 RNP - Mackey-Glass Prediction</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -250,81 +250,81 @@ cat > docs/index.html << 'EOF'
 </head>
 <body>
     <div class="container">
-        <h1>🧠 Trabalho 2 - Redes Neurais Profundas</h1>
-        <h2 style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Predição de Séries Temporais Mackey-Glass</h2>
+        <h1>🧠 Work 2 - Deep Neural Networks</h1>
+        <h2 style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Mackey-Glass Time Series Prediction</h2>
         
         <div class="card">
-            <h3>📊 Sobre o Projeto</h3>
-            <p>Este projeto implementa e compara <span class="highlight">três tipos de redes neurais</span> (MLP, LSTM, GRU) para predição da série temporal Mackey-Glass, com múltiplas configurações e variações para análise abrangente.</p>
+            <h3>📊 About the Project</h3>
+            <p>This project implements and compares <span class="highlight">three types of neural networks</span> (MLP, LSTM, GRU) for Mackey-Glass time series prediction, with multiple configurations and variations for comprehensive analysis.</p>
             
             <div class="results-grid">
                 <div class="metric-card">
-                    <h4>🏆 Melhor Modelo</h4>
+                    <h4>🏆 Best Model</h4>
                     <div class="metric-value">LSTM Bidirectional</div>
                     <p>R² = 0.990789</p>
                 </div>
                 <div class="metric-card">
-                    <h4>🔬 Modelos Avaliados</h4>
+                    <h4>🔬 Models Evaluated</h4>
                     <div class="metric-value">7</div>
-                    <p>Configurações Otimizadas</p>
+                    <p>Optimized Configurations</p>
                 </div>
                 <div class="metric-card">
                     <h4>📈 Dataset</h4>
                     <div class="metric-value">998</div>
-                    <p>Pontos de Validação</p>
+                    <p>Validation Points</p>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3>🌐 Relatório Interativo</h3>
-            <p>Acesse o relatório completo com <strong>visualizações interativas</strong>, métricas detalhadas (EQMN1, EQMN2, R², RMSE, MAE, MAPE) e análises estatísticas dos experimentos realizados.</p>
+            <h3>🌐 Interactive Report</h3>
+            <p>Access the complete report with <strong>interactive visualizations</strong>, detailed metrics (EQMN1, EQMN2, R², RMSE, MAE, MAPE) and statistical analyses of the conducted experiments.</p>
             <div style="text-align: center; margin-top: 20px;">
-                <a href="relatorio.html" class="btn btn-success">📊 Ver Relatório Interativo Completo</a>
+                <a href="report.html" class="btn btn-success">📊 View Complete Interactive Report</a>
             </div>
         </div>
 
         <div class="card">
-            <h3>📚 Documentação</h3>
-            <p>Explore a documentação completa do projeto:</p>
+            <h3>📚 Documentation</h3>
+            <p>Explore the complete project documentation:</p>
             <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/README.md" class="btn">📖 README</a>
-            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/COMO_USAR.md" class="btn">🚀 Como Usar</a>
-            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/RESULTADOS_FINAIS.md" class="btn">📈 Resultados</a>
-            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/RESUMO_EXECUTIVO.md" class="btn">📊 Resumo</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/HOW_TO_USE.md" class="btn">🚀 How to Use</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/FINAL_RESULTS.md" class="btn">📈 Results</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/EXECUTIVE_SUMMARY.md" class="btn">📊 Summary</a>
         </div>
 
         <div class="card">
-            <h3>📁 Código Fonte</h3>
-            <p>Acesse o código completo e reproduzível no GitHub:</p>
-            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit" class="btn">💻 Repositório GitHub</a>
+            <h3>📁 Source Code</h3>
+            <p>Access the complete and reproducible code on GitHub:</p>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit" class="btn">💻 GitHub Repository</a>
         </div>
 
         <div class="author-info">
-            <h3>👨‍🎓 Autor</h3>
+            <h3>👨‍🎓 Author</h3>
             <p><strong>Rafael Ratacheski de Sousa Raulino</strong></p>
-            <p>Mestrando em Engenharia Elétrica e de Computação - UFG</p>
-            <p>Disciplina: Redes Neurais Profundas - 2025/1</p>
-            <p>Data: Junho de 2025</p>
+            <p>MSc Student in Electrical and Computer Engineering - UFG</p>
+            <p>Course: Deep Neural Networks - 2025/1</p>
+            <p>Date: June 2025</p>
         </div>
 
         <div class="footer">
-            <p>🌐 Hospedado no GitHub Pages | 🔬 Experimentos realizados com PyTorch</p>
+            <p>🌐 Hosted on GitHub Pages | 🔬 Experiments conducted with PyTorch</p>
         </div>
     </div>
 </body>
 </html>
 EOF
 
-# Solicitar informações do usuário
+# Request user information
 echo ""
-echo "🔧 Configuração personalizada:"
+echo "🔧 Custom configuration:"
 
-echo "✅ Página principal criada"
+echo "✅ Main page created"
 
-# Criar arquivo CSS personalizado
-echo "🎨 Criando estilos personalizados..."
+# Create custom CSS file
+echo "🎨 Creating custom styles..."
 cat > docs/css/styles.css << 'EOF'
-/* Estilos adicionais para GitHub Pages */
+/* Additional styles for GitHub Pages */
 .github-badge {
     position: fixed;
     top: 0;
@@ -361,36 +361,36 @@ cat > docs/css/styles.css << 'EOF'
 }
 EOF
 
-# Verificar arquivos criados
+# Check created files
 echo ""
-echo "📊 Verificando arquivos criados:"
+echo "📊 Checking created files:"
 echo "📁 docs/"
 echo "   ├── index.html ✅"
-echo "   ├── relatorio.html $([ -f docs/relatorio.html ] && echo "✅" || echo "❌")"
+echo "   ├── report.html $([ -f docs/report.html ] && echo "✅" || echo "❌")"
 echo "   ├── css/styles.css ✅"
-echo "   └── images/ $([ -d docs/images ] && echo "✅ ($(ls docs/images/ 2>/dev/null | wc -l) arquivos)" || echo "❌")"
+echo "   └── images/ $([ -d docs/images ] && echo "✅ ($(ls docs/images/ 2>/dev/null | wc -l) files)" || echo "❌")"
 
-# Contar arquivos de imagem
+# Count image files
 IMG_COUNT=$(find docs/images -type f 2>/dev/null | wc -l)
-echo "🖼️ Total de arquivos copiados: $IMG_COUNT"
+echo "🖼️ Total files copied: $IMG_COUNT"
 
 echo ""
-echo "✅ Configuração do GitHub Pages concluída!"
+echo "✅ GitHub Pages setup completed!"
 echo ""
-echo "📋 PRÓXIMOS PASSOS:"
+echo "📋 NEXT STEPS:"
 echo "   1. git add docs/"
 echo "   2. git commit -m 'Add GitHub Pages configuration with interactive report'"
 echo "   3. git push origin master"
-echo "   4. Ir para Settings → Pages no GitHub"
-echo "   5. Configurar Source: 'Deploy from a branch'"
+echo "   4. Go to Settings → Pages on GitHub"
+echo "   5. Configure Source: 'Deploy from a branch'"
 echo "   6. Branch: 'master', Folder: '/docs'"
-echo "   7. Aguardar deploy (2-3 minutos)"
+echo "   7. Wait for deployment (2-3 minutes)"
 echo ""
-echo "🌐 URL final será:"
+echo "🌐 Final URL will be:"
 echo "   https://ratacheski.github.io/Mackey-Glass-Predicit/"
 echo ""
-echo "📊 Relatório interativo em:"
-echo "   https://ratacheski.github.io/Mackey-Glass-Predicit/relatorio.html"
+echo "📊 Interactive report at:"
+echo "   https://ratacheski.github.io/Mackey-Glass-Predicit/report.html"
 echo ""
-echo "💡 DICA: Adicione este badge ao seu README.md:"
+echo "💡 TIP: Add this badge to your README.md:"
 echo "[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-brightgreen?style=for-the-badge&logo=github)](https://ratacheski.github.io/Mackey-Glass-Predicit/)" 

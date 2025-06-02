@@ -1,12 +1,12 @@
 import torch
 
-# Configurações gerais
+# General configurations
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 RANDOM_SEED = 42
 
-# Configurações da série temporal de Mackey-Glass
+# Mackey-Glass time series configurations
 MACKEY_GLASS_CONFIG = {
-    'n_points': 10000,  # Número de pontos a gerar
+    'n_points': 10000,  # Number of points to generate
     'tau': 20,         # Delay parameter
     'gamma': 0.2,      # Gamma parameter
     'beta': 0.4,       # Beta parameter
@@ -14,29 +14,29 @@ MACKEY_GLASS_CONFIG = {
     'x0': 0.8          # Initial value
 }
 
-# Configurações do dataset
+# Dataset configurations
 DATASET_CONFIG = {
-    'window_size': 20,        # Tamanho da janela de entrada
-    'prediction_steps': 1,    # Número de passos à frente para predizer
-    'train_ratio': 0.9,       # Proporção de dados para treino (90%)
-    'batch_size': 8192,         # Tamanho do batch
-    'shuffle_train': True,    # Embaralhar dados de treino
-    'num_workers': 0          # Número de workers para DataLoader
+    'window_size': 20,        # Input window size
+    'prediction_steps': 1,    # Number of steps ahead to predict
+    'train_ratio': 0.9,       # Proportion of data for training (90%)
+    'batch_size': 8192,         # Batch size
+    'shuffle_train': True,    # Shuffle training data
+    'num_workers': 0          # Number of workers for DataLoader
 }
 
-# Configurações de treinamento
+# Training configurations
 TRAINING_CONFIG = {
     'epochs': 150,
     'learning_rate': 1e-3,
     'weight_decay': 1e-5,
     'patience': 15,           # Early stopping
-    'min_delta': 1e-6,        # Mínima melhoria para considerar progresso
-    'use_scheduler': True,    # Usar scheduler de learning rate
+    'min_delta': 1e-6,        # Minimum improvement to consider progress
+    'use_scheduler': True,    # Use learning rate scheduler
     'save_best_model': True,
     'save_final_model': True
 }
 
-# Configurações específicas para cada modelo
+# Specific configurations for each model
 MODEL_CONFIGS = {
     'mlp_small': {
         'model_type': 'mlp',
@@ -164,7 +164,7 @@ MODEL_CONFIGS = {
     }
 }
 
-# Configurações de saída
+# Output configurations
 OUTPUT_CONFIG = {
     'base_output_dir': './results',
     'save_plots': True,
@@ -174,22 +174,22 @@ OUTPUT_CONFIG = {
     'plot_dpi': 300
 }
 
-# Configurações de visualização
+# Visualization configurations
 VISUALIZATION_CONFIG = {
-    'n_points_plot': 500,     # Número máximo de pontos para visualização
+    'n_points_plot': 500,     # Maximum number of points for visualization
     'figsize_small': (10, 6),
     'figsize_medium': (12, 8),
     'figsize_large': (15, 10),
     'style': 'ggplot'
 }
 
-# Função para obter configuração completa para um experimento
+# Function to get complete configuration for an experiment
 def get_experiment_config(model_name):
     """
-    Retorna configuração completa para um experimento específico
+    Returns complete configuration for a specific experiment
     """
     if model_name not in MODEL_CONFIGS:
-        raise ValueError(f"Modelo '{model_name}' não encontrado na configuração")
+        raise ValueError(f"Model '{model_name}' not found in configuration")
     
     config = {
         'model': MODEL_CONFIGS[model_name],
@@ -202,15 +202,15 @@ def get_experiment_config(model_name):
         'random_seed': RANDOM_SEED
     }
     
-    # Adicionar caminhos específicos do modelo
+    # Add model-specific paths
     model_output_dir = f"{OUTPUT_CONFIG['base_output_dir']}/{model_name}"
     config['training']['model_save_path'] = f"{model_output_dir}/best_model.pth"
     config['training']['final_model_save_path'] = f"{model_output_dir}/final_model.pth"
     
     return config
 
-# Lista dos modelos principais (um de cada tipo)
+# List of main models (one of each type)
 MAIN_MODELS = ['mlp_large', 'lstm_large', 'gru_large']
 
-# Lista de todos os modelos disponíveis
+# List of all available models
 ALL_MODELS = list(MODEL_CONFIGS.keys()) 

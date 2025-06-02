@@ -8,7 +8,7 @@ import random
 from tqdm.auto import tqdm
 import time
 
-# Importar módulos do projeto
+# Import project modules
 from models import MLPModel, LSTMModel, GRUModel
 from data.mackey_glass_generator import MackeyGlassGenerator, create_dataloaders
 from utils.training import train_model, validate_epoch, calculate_metrics
@@ -20,7 +20,7 @@ from config.config import (
 
 def set_random_seeds(seed):
     """
-    Define seeds para reprodutibilidade
+    Set seeds for reproducibility
     """
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -33,7 +33,7 @@ def set_random_seeds(seed):
 
 def create_model(model_config):
     """
-    Cria modelo baseado na configuração
+    Create model based on configuration
     """
     model_type = model_config['model_type']
     
@@ -66,37 +66,37 @@ def create_model(model_config):
             use_attention=model_config['use_attention']
         )
     else:
-        raise ValueError(f"Tipo de modelo não suportado: {model_type}")
+        raise ValueError(f"Unsupported model type: {model_type}")
 
 
 def run_single_experiment(model_name, verbose=True):
     """
-    Executa um único experimento
+    Run a single experiment
     """
     if verbose:
         print(f"\n{'='*60}")
-        print(f"INICIANDO EXPERIMENTO: {model_name.upper()}")
+        print(f"STARTING EXPERIMENT: {model_name.upper()}")
         print(f"{'='*60}")
     
-    # Obter configuração
+    # Get configuration
     config = get_experiment_config(model_name)
     
-    # Definir seeds
+    # Set seeds
     set_random_seeds(config['random_seed'])
     
-    # Gerar série de Mackey-Glass
+    # Generate Mackey-Glass series
     if verbose:
-        print("Gerando série temporal de Mackey-Glass...")
+        print("Generating Mackey-Glass time series...")
     
     generator = MackeyGlassGenerator(**config['mackey_glass'])
     series = generator.generate_series()
     
     if verbose:
-        print(f"Série gerada com {len(series)} pontos")
+        print(f"Series generated with {len(series)} points")
     
-    # Criar dataloaders
+    # Create dataloaders
     if verbose:
-        print("Criando dataloaders...")
+        print("Creating dataloaders...")
     
     train_loader, val_loader, dataset = create_dataloaders(
         series=series,
@@ -107,9 +107,9 @@ def run_single_experiment(model_name, verbose=True):
         shuffle=config['dataset']['shuffle_train']
     )
     
-    # Criar modelo
+    # Create model
     if verbose:
-        print("Criando modelo...")
+        print("Creating model...")
     
     model = create_model(config['model'])
     model = model.to(config['device'])
@@ -117,42 +117,42 @@ def run_single_experiment(model_name, verbose=True):
     if verbose:
         model.print_model_summary()
     
-    # Treinar modelo
+    # Train model
     if verbose:
-        print("\nIniciando treinamento...")
+        print("\nStarting training...")
     
     start_time = time.time()
     training_results = train_model(model, train_loader, val_loader, config['training'], config['device'])
     training_time = time.time() - start_time
     
     if verbose:
-        print(f"\nTreinamento concluído em {training_time:.2f} segundos")
-        print(f"Melhor loss de validação: {training_results['best_val_loss']:.6f}")
+        print(f"\nTraining completed in {training_time:.2f} seconds")
+        print(f"Best validation loss: {training_results['best_val_loss']:.6f}")
     
-    # Avaliar modelo
+    # Evaluate model
     if verbose:
-        print("Avaliando modelo...")
+        print("Evaluating model...")
     
     model.eval()
     criterion = torch.nn.MSELoss()
     val_loss, predictions, actuals = validate_epoch(model, val_loader, criterion, config['device'])
     
-    # Desnormalizar predições e valores reais
+    # Denormalize predictions and actual values
     predictions_denorm = dataset.denormalize(predictions.flatten())
     actuals_denorm = dataset.denormalize(actuals.flatten())
     
-    # Calcular métricas
+    # Calculate metrics
     metrics = calculate_metrics(predictions_denorm, actuals_denorm)
     
     if verbose:
-        print(f"\nMÉTRICAS DE VALIDAÇÃO:")
+        print(f"\nVALIDATION METRICS:")
         print(f"MSE: {metrics['MSE']:.6f}")
         print(f"RMSE: {metrics['RMSE']:.6f}")
         print(f"MAE: {metrics['MAE']:.6f}")
         print(f"MAPE: {metrics['MAPE']:.2f}%")
         print(f"R²: {metrics['R²']:.6f}")
     
-    # Retornar resultados
+    # Return results
     results = {
         'model_name': model_name,
         'model_info': model.get_model_info(),
@@ -173,77 +173,77 @@ def run_single_experiment(model_name, verbose=True):
 
 def run_all_experiments(models_to_run=None, save_results=True, output_dir_prefix=None):
     """
-    Executa experimentos para todos os modelos especificados
+    Run experiments for all specified models
     """
     if models_to_run is None:
         models_to_run = MAIN_MODELS
     
-    print(f"EXECUTANDO EXPERIMENTOS PARA {len(models_to_run)} MODELOS")
-    print(f"Dispositivo: {DEVICE}")
-    print(f"Modelos: {', '.join(models_to_run)}")
+    print(f"RUNNING EXPERIMENTS FOR {len(models_to_run)} MODELS")
+    print(f"Device: {DEVICE}")
+    print(f"Models: {', '.join(models_to_run)}")
     print(f"{'='*80}")
     
     all_results = {}
     
     for i, model_name in enumerate(models_to_run):
-        print(f"\n[{i+1}/{len(models_to_run)}] Executando {model_name}...")
+        print(f"\n[{i+1}/{len(models_to_run)}] Running {model_name}...")
         
         try:
             results = run_single_experiment(model_name, verbose=True)
             all_results[model_name] = results
             
-            print(f"✓ {model_name} concluído com sucesso!")
+            print(f"✓ {model_name} completed successfully!")
             
         except Exception as e:
-            print(f"✗ Erro ao executar {model_name}: {str(e)}")
+            print(f"✗ Error running {model_name}: {str(e)}")
             continue
     
-    # Salvar resultados e gerar relatório
+    # Save results and generate report
     if save_results and all_results:
         print(f"\n{'='*60}")
-        print("GERANDO RELATÓRIO FINAL")
+        print("GENERATING FINAL REPORT")
         print(f"{'='*60}")
         
-        # Criar diretório de resultados
+        # Create results directory
         if output_dir_prefix:
-            # Se foi especificado um prefixo personalizado, usar ele
+            # If a custom prefix was specified, use it
             timestamp = int(time.time())
             output_dir = f"./{output_dir_prefix}_{timestamp}"
         else:
-            # Usar o padrão original
+            # Use the default original
             output_dir = f"./results/final_report_{int(time.time())}"
         
         os.makedirs(output_dir, exist_ok=True)
         
-        # Gerar relatório abrangente com o novo sistema
+        # Generate comprehensive report with the new system
         viz.generate_comprehensive_report(all_results, output_dir)
         
-        print(f"\nRelatório completo gerado em: {output_dir}")
+        print(f"\nComplete report generated in: {output_dir}")
     
     return all_results
 
 
 def compare_model_types():
     """
-    Compara os três tipos principais de modelos
+    Compare the three main types of models
     """
-    print("COMPARAÇÃO DOS TRÊS TIPOS PRINCIPAIS DE MODELOS")
+    print("COMPARISON OF THE THREE MAIN TYPES OF MODELS")
     print("=" * 60)
     
     results = run_all_experiments(MAIN_MODELS, save_results=True)
     
     print(f"\n{'='*60}")
-    print("RESUMO DA COMPARAÇÃO")
+    print("SUMMARY OF COMPARISON")
     print(f"{'='*60}")
     
     for model_name, result in results.items():
         metrics = result['metrics']
         
         print(f"\n{model_name.upper()}:")
-        print(f"  Tempo de treinamento: {result['training_time']:.2f}s")
-        print(f"  Épocas treinadas: {result['epochs_trained']}")
-        print(f"  Parâmetros: {result['model_info']['total_parameters']:,}")
-        print(f"  RMSE (validação): {metrics['RMSE']:.6f}")
+        print(f"  Training time: {result['training_time']:.2f}s")
+        print(f"  Trained epochs: {result['epochs_trained']}")
+        print(f"  Parameters: {result['model_info']['total_parameters']:,}")
+        print(f"  RMSE (validation): {metrics['RMSE']:.6f}")
     
     return results
 
@@ -251,12 +251,12 @@ def compare_model_types():
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Executar experimentos de predição de séries temporais')
+    parser = argparse.ArgumentParser(description='Run time series prediction experiments')
     parser.add_argument('--models', nargs='+', choices=ALL_MODELS + ['main', 'all'], 
-                       default='main', help='Modelos para executar')
-    parser.add_argument('--no-save', action='store_true', help='Não salvar resultados')
+                       default='main', help='Models to run')
+    parser.add_argument('--no-save', action='store_true', help='Do not save results')
     parser.add_argument('--output-dir', type=str, default=None, 
-                       help='Prefixo personalizado para a pasta de saída (ex: meu_experimento)')
+                       help='Custom prefix for output folder (ex: my_experiment)')
     
     args = parser.parse_args()
     
@@ -267,13 +267,13 @@ if __name__ == "__main__":
     else:
         models_to_run = args.models
     
-    # Executar experimentos
+    # Run experiments
     results = run_all_experiments(models_to_run, save_results=not args.no_save, 
                                 output_dir_prefix=args.output_dir)
     
-    print(f"\nExperimentos concluídos!")
-    print(f"Total de modelos executados: {len(results)}")
+    print(f"\nExperiments completed!")
+    print(f"Total models executed: {len(results)}")
     
-    # Mostrar informação sobre a pasta de saída se foi especificada
+    # Show information about output folder if specified
     if args.output_dir and not args.no_save:
-        print(f"Resultados salvos com prefixo: {args.output_dir}") 
+        print(f"Results saved with prefix: {args.output_dir}") 

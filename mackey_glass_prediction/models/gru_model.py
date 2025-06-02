@@ -5,20 +5,20 @@ import torch.nn.functional as F
 
 class GRUModel(nn.Module):
     """
-    Modelo GRU (Gated Recurrent Unit) para predição de séries temporais
+    GRU (Gated Recurrent Unit) model for time series prediction
     """
     
     def __init__(self, input_size=1, hidden_size=64, num_layers=2, output_size=1,
                  dropout_rate=0.2, bidirectional=False, use_attention=False):
         """
-        Parâmetros:
-        - input_size: número de features de entrada (1 para série univariada)
-        - hidden_size: número de unidades GRU em cada camada
-        - num_layers: número de camadas GRU empilhadas
-        - output_size: número de passos à frente para predizer
-        - dropout_rate: taxa de dropout para regularização
-        - bidirectional: se True, usa GRU bidirecional
-        - use_attention: se True, adiciona mecanismo de atenção
+        Parameters:
+        - input_size: number of input features (1 for univariate series)
+        - hidden_size: number of GRU units in each layer
+        - num_layers: number of stacked GRU layers
+        - output_size: number of steps ahead to predict
+        - dropout_rate: dropout rate for regularization
+        - bidirectional: if True, uses bidirectional GRU
+        - use_attention: if True, adds attention mechanism
         """
         super(GRUModel, self).__init__()
         
@@ -30,7 +30,7 @@ class GRUModel(nn.Module):
         self.bidirectional = bidirectional
         self.use_attention = use_attention
         
-        # Camada GRU
+        # GRU layer
         self.gru = nn.GRU(
             input_size=input_size,
             hidden_size=hidden_size,
@@ -40,14 +40,14 @@ class GRUModel(nn.Module):
             batch_first=True
         )
         
-        # Calcular o tamanho da saída do GRU
+        # Calculate GRU output size
         gru_output_size = hidden_size * 2 if bidirectional else hidden_size
         
-        # Camada de atenção (opcional)
+        # Attention layer (optional)
         if use_attention:
             self.attention = AttentionLayer(gru_output_size)
         
-        # Camadas fully connected
+        # Fully connected layers
         self.fc_layers = nn.Sequential(
             nn.Dropout(dropout_rate),
             nn.Linear(gru_output_size, hidden_size // 2),
@@ -56,12 +56,12 @@ class GRUModel(nn.Module):
             nn.Linear(hidden_size // 2, output_size)
         )
         
-        # Inicializar pesos
+        # Initialize weights
         self._initialize_weights()
     
     def _initialize_weights(self):
         """
-        Inicializa os pesos da rede
+        Initialize network weights
         """
         for name, param in self.gru.named_parameters():
             if 'weight_ih' in name:
@@ -79,35 +79,35 @@ class GRUModel(nn.Module):
     
     def forward(self, x):
         """
-        Forward pass da rede
+        Forward pass of the network
         """
         batch_size = x.size(0)
         
-        # Reshape para (batch_size, sequence_length, input_size)
+        # Reshape to (batch_size, sequence_length, input_size)
         if len(x.shape) == 2:
-            x = x.unsqueeze(-1)  # Adicionar dimensão de feature
+            x = x.unsqueeze(-1)  # Add feature dimension
         
-        # Inicializar estado oculto
+        # Initialize hidden state
         h0 = self._init_hidden(batch_size, x.device)
         
-        # Forward pass através do GRU
+        # Forward pass through GRU
         gru_out, hidden = self.gru(x, h0)
         
-        # Aplicar atenção se configurado
+        # Apply attention if configured
         if self.use_attention:
             gru_out = self.attention(gru_out)
         else:
-            # Usar apenas a última saída da sequência
+            # Use only the last output of the sequence
             gru_out = gru_out[:, -1, :]
         
-        # Forward pass através das camadas fully connected
+        # Forward pass through fully connected layers
         output = self.fc_layers(gru_out)
         
         return output
     
     def _init_hidden(self, batch_size, device):
         """
-        Inicializa o estado oculto do GRU
+        Initialize GRU hidden state
         """
         num_directions = 2 if self.bidirectional else 1
         
@@ -117,7 +117,7 @@ class GRUModel(nn.Module):
     
     def get_model_info(self):
         """
-        Retorna informações sobre o modelo
+        Return model information
         """
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -139,28 +139,28 @@ class GRUModel(nn.Module):
     
     def print_model_summary(self):
         """
-        Imprime um resumo do modelo
+        Print model summary
         """
         info = self.get_model_info()
         print("=" * 50)
-        print("RESUMO DO MODELO GRU")
+        print("GRU MODEL SUMMARY")
         print("=" * 50)
-        print(f"Tipo: {info['model_type']}")
-        print(f"Tamanho da entrada: {info['input_size']}")
-        print(f"Tamanho oculto: {info['hidden_size']}")
-        print(f"Número de camadas: {info['num_layers']}")
-        print(f"Tamanho da saída: {info['output_size']}")
-        print(f"Taxa de dropout: {info['dropout_rate']}")
-        print(f"Bidirecional: {info['bidirectional']}")
-        print(f"Usa atenção: {info['use_attention']}")
-        print(f"Total de parâmetros: {info['total_parameters']:,}")
-        print(f"Parâmetros treináveis: {info['trainable_parameters']:,}")
+        print(f"Type: {info['model_type']}")
+        print(f"Input size: {info['input_size']}")
+        print(f"Hidden size: {info['hidden_size']}")
+        print(f"Number of layers: {info['num_layers']}")
+        print(f"Output size: {info['output_size']}")
+        print(f"Dropout rate: {info['dropout_rate']}")
+        print(f"Bidirectional: {info['bidirectional']}")
+        print(f"Uses attention: {info['use_attention']}")
+        print(f"Total parameters: {info['total_parameters']:,}")
+        print(f"Trainable parameters: {info['trainable_parameters']:,}")
         print("=" * 50)
 
 
 class AttentionLayer(nn.Module):
     """
-    Camada de atenção para o modelo GRU
+    Attention layer for GRU model
     """
     
     def __init__(self, hidden_size):
@@ -170,14 +170,14 @@ class AttentionLayer(nn.Module):
         
     def forward(self, gru_output):
         """
-        Aplica atenção às saídas do GRU
+        Apply attention to GRU outputs
         """
         # gru_output: (batch_size, seq_len, hidden_size)
         
-        # Calcular pesos de atenção
+        # Calculate attention weights
         attention_weights = torch.softmax(self.attention(gru_output), dim=1)
         
-        # Aplicar pesos de atenção
+        # Apply attention weights
         context_vector = torch.sum(attention_weights * gru_output, dim=1)
         
         return context_vector
@@ -185,7 +185,7 @@ class AttentionLayer(nn.Module):
 
 def create_gru_variants():
     """
-    Cria diferentes variações do modelo GRU para experimentação
+    Create different GRU model variations for experimentation
     """
     variants = {
         'gru_small': GRUModel(
@@ -233,7 +233,7 @@ def create_gru_variants():
             bidirectional=False,
             use_attention=True
         ),
-        'gru_bi_attention': GRUModel(
+        'gru_bidirectional_attention': GRUModel(
             input_size=1,
             hidden_size=64,
             num_layers=2,
@@ -244,4 +244,27 @@ def create_gru_variants():
         )
     }
     
-    return variants 
+    return variants
+
+
+if __name__ == "__main__":
+    # Test model creation
+    model = GRUModel()
+    model.print_model_summary()
+    
+    # Test forward pass
+    batch_size = 32
+    sequence_length = 50
+    input_size = 1
+    
+    x = torch.randn(batch_size, sequence_length, input_size)
+    output = model(x)
+    
+    print(f"\nInput shape: {x.shape}")
+    print(f"Output shape: {output.shape}")
+    
+    # Test variants
+    print("\nTesting model variants:")
+    variants = create_gru_variants()
+    for name, variant in variants.items():
+        print(f"{name}: {variant.get_model_info()['total_parameters']} parameters") 

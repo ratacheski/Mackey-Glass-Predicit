@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para gerar relatório HTML interativo e didático
+Script to generate interactive and didactic HTML report
 """
 
 import os
@@ -8,27 +8,27 @@ import sys
 import numpy as np
 from datetime import datetime
 
-# Adicionar o diretório atual ao PYTHONPATH
+# Add current directory to PYTHONPATH
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils.visualization.interactive_html import generate_interactive_html_report
 
 def create_sample_results():
-    """Cria resultados de exemplo baseados nos modelos do projeto"""
+    """Creates sample results based on project models"""
     
-    # Simular dados de séries temporais (Mackey-Glass)
+    # Simulate time series data (Mackey-Glass)
     np.random.seed(42)
     n_samples = 1000
     
-    # Valores "reais" (simulados)
+    # "Real" values (simulated)
     t = np.linspace(0, 100, n_samples)
     actuals = np.sin(0.1 * t) + 0.1 * np.sin(0.5 * t) + 0.05 * np.random.randn(n_samples)
     
-    # Simular predições para diferentes modelos com diferentes qualidades
+    # Simulate predictions for different models with different qualities
     models_data = {
         'LSTM Medium': {
             'actuals': actuals,
-            'predictions': actuals + 0.02 * np.random.randn(n_samples),  # Muito bom
+            'predictions': actuals + 0.02 * np.random.randn(n_samples),  # Very good
             'train_losses': np.exp(-np.linspace(0, 5, 100)) + 0.01 * np.random.randn(100),
             'val_losses': np.exp(-np.linspace(0, 4.5, 100)) + 0.015 * np.random.randn(100),
             'model_info': {
@@ -39,7 +39,7 @@ def create_sample_results():
         },
         'GRU Medium': {
             'actuals': actuals,
-            'predictions': actuals + 0.015 * np.random.randn(n_samples) + 0.01,  # Excelente
+            'predictions': actuals + 0.015 * np.random.randn(n_samples) + 0.01,  # Excellent
             'train_losses': np.exp(-np.linspace(0, 5.2, 100)) + 0.008 * np.random.randn(100),
             'val_losses': np.exp(-np.linspace(0, 4.8, 100)) + 0.012 * np.random.randn(100),
             'model_info': {
@@ -50,7 +50,7 @@ def create_sample_results():
         },
         'MLP Medium': {
             'actuals': actuals,
-            'predictions': actuals + 0.08 * np.random.randn(n_samples) + 0.05,  # Moderado
+            'predictions': actuals + 0.08 * np.random.randn(n_samples) + 0.05,  # Moderate
             'train_losses': np.exp(-np.linspace(0, 3.5, 100)) + 0.02 * np.random.randn(100),
             'val_losses': np.exp(-np.linspace(0, 3, 100)) + 0.025 * np.random.randn(100),
             'model_info': {
@@ -61,7 +61,7 @@ def create_sample_results():
         },
         'RNN Basic': {
             'actuals': actuals,
-            'predictions': actuals + 0.12 * np.random.randn(n_samples) + 0.08,  # Baixo
+            'predictions': actuals + 0.12 * np.random.randn(n_samples) + 0.08,  # Low
             'train_losses': np.exp(-np.linspace(0, 2.8, 100)) + 0.03 * np.random.randn(100),
             'val_losses': np.exp(-np.linspace(0, 2.5, 100)) + 0.035 * np.random.randn(100),
             'model_info': {
@@ -75,45 +75,45 @@ def create_sample_results():
     return models_data
 
 def create_sample_files():
-    """Cria lista de arquivos de exemplo que seriam gerados"""
+    """Creates list of sample files that would be generated"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     sample_files = {
-        'overview': f'01_visao_geral_{timestamp}.png',
-        'training_LSTM_Medium': f'02_LSTM_Medium_treinamento_{timestamp}.png',
-        'predictions_LSTM_Medium': f'02_LSTM_Medium_predicoes_{timestamp}.png',
-        'training_GRU_Medium': f'03_GRU_Medium_treinamento_{timestamp}.png',
-        'predictions_GRU_Medium': f'03_GRU_Medium_predicoes_{timestamp}.png',
-        'training_MLP_Medium': f'04_MLP_Medium_treinamento_{timestamp}.png',
-        'predictions_MLP_Medium': f'04_MLP_Medium_predicoes_{timestamp}.png',
+        'overview': f'01_overview_{timestamp}.png',
+        'training_LSTM_Medium': f'02_LSTM_Medium_training_{timestamp}.png',
+        'predictions_LSTM_Medium': f'02_LSTM_Medium_predictions_{timestamp}.png',
+        'training_GRU_Medium': f'03_GRU_Medium_training_{timestamp}.png',
+        'predictions_GRU_Medium': f'03_GRU_Medium_predictions_{timestamp}.png',
+        'training_MLP_Medium': f'04_MLP_Medium_training_{timestamp}.png',
+        'predictions_MLP_Medium': f'04_MLP_Medium_predictions_{timestamp}.png',
         'qq_LSTM_Medium': f'02_LSTM_Medium_qq_plot_{timestamp}.png',
         'cdf_LSTM_Medium': f'02_LSTM_Medium_cdf_{timestamp}.png',
-        'metrics_table': f'99_tabela_metricas_{timestamp}.png',
-        'metrics_comparison': f'99_comparacao_metricas_{timestamp}.png'
+        'metrics_table': f'99_metrics_table_{timestamp}.png',
+        'metrics_comparison': f'99_metrics_comparison_{timestamp}.png'
     }
     
     return sample_files
 
 def main():
-    """Função principal para gerar o relatório interativo"""
-    print("🚀 Gerando Relatório HTML Interativo e Didático...")
+    """Main function to generate the interactive report"""
+    print("🚀 Generating Interactive and Didactic HTML Report...")
     print("=" * 60)
-    print("📝 Desenvolvido por: Rafael Ratacheski de Sousa Raulino")
-    print("🎓 Mestrando em Engenharia Elétrica e de Computação - UFG")
-    print("📚 Disciplina: Redes Neurais Profundas - 2025/1")
+    print("📝 Developed by: Rafael Ratacheski de Sousa Raulino")
+    print("🎓 Master's Student in Electrical and Computer Engineering - UFG")
+    print("📚 Course: Deep Neural Networks - 2025/1")
     print("=" * 60)
     
-    # Criar diretório de saída
+    # Create output directory
     output_dir = "output_reports"
     os.makedirs(output_dir, exist_ok=True)
     
-    # Criar dados de exemplo
-    print("📊 Criando dados de exemplo...")
+    # Create sample data
+    print("📊 Creating sample data...")
     sample_results = create_sample_results()
     sample_files = create_sample_files()
     
-    # Mostrar preview das métricas calculadas
-    print("\n📈 Preview das Métricas Calculadas:")
+    # Show preview of calculated metrics
+    print("\n📈 Preview of Calculated Metrics:")
     print("-" * 50)
     
     from utils.visualization.interactive_html import calculate_metrics
@@ -133,11 +133,10 @@ def main():
             if not np.isnan(metrics['eqmn2']):
                 print(f"   EQMN2: {metrics['eqmn2']:.6f}")
     
-    # Gerar relatório HTML interativo
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    html_path = os.path.join(output_dir, f"relatorio.html")
+    # Generate interactive HTML report
+    html_path = os.path.join(output_dir, f"report.html")
     
-    print(f"\n🌐 Gerando relatório HTML...")
+    print(f"\n🌐 Generating HTML report...")
     
     try:
         generate_interactive_html_report(
@@ -147,26 +146,26 @@ def main():
             report_type="comparison"
         )
         
-        print("\n✅ Relatório gerado com sucesso!")
-        print(f"📁 Arquivo: {html_path}")
-        print(f"🌐 Para visualizar, abra o arquivo em um navegador web")
-        print("\n🔧 Funcionalidades incluídas:")
-        print("   • 📊 Métricas detalhadas (R², RMSE, MAE, MSE, MAPE, EQMN1, EQMN2)")
-        print("   • 🖼️  Visualização de imagens em tela cheia")
-        print("   • 📈 Gráficos organizados por modelo")
-        print("   • 📋 Comparações interativas")
-        print("   • 👨‍🎓 Informações do autor")
+        print("\n✅ Report generated successfully!")
+        print(f"📁 File: {html_path}")
+        print(f"🌐 To view, open the file in a web browser")
+        print("\n🔧 Included features:")
+        print("   • 📊 Detailed metrics (R², RMSE, MAE, MSE, MAPE, EQMN1, EQMN2)")
+        print("   • 🖼️  Full-screen image visualization")
+        print("   • 📈 Graphs organized by model")
+        print("   • 📋 Interactive comparisons")
+        print("   • 👨‍🎓 Author information")
         
-        # Tentar abrir automaticamente no navegador (Linux)
+        # Try to open automatically in browser (Linux)
         try:
             import webbrowser
             webbrowser.open(f'file://{os.path.abspath(html_path)}')
-            print("🚀 Abrindo relatório no navegador...")
+            print("🚀 Opening report in browser...")
         except:
-            print("💡 Abra manualmente o arquivo no navegador para visualizar")
+            print("💡 Manually open the file in a browser to view")
             
     except Exception as e:
-        print(f"❌ Erro ao gerar relatório: {e}")
+        print(f"❌ Error generating report: {e}")
         import traceback
         traceback.print_exc()
 

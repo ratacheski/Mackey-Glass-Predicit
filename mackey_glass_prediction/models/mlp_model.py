@@ -5,18 +5,18 @@ import torch.nn.functional as F
 
 class MLPModel(nn.Module):
     """
-    Modelo MLP (Multi-Layer Perceptron) para predição de séries temporais
+    MLP (Multi-Layer Perceptron) model for time series prediction
     """
     
     def __init__(self, input_size=20, hidden_sizes=[128, 64, 32], output_size=1, 
                  dropout_rate=0.2, activation='relu'):
         """
-        Parâmetros:
-        - input_size: tamanho da janela de entrada
-        - hidden_sizes: lista com o número de neurônios em cada camada oculta
-        - output_size: número de passos à frente para predizer
-        - dropout_rate: taxa de dropout para regularização
-        - activation: função de ativação ('relu', 'tanh', 'leaky_relu')
+        Parameters:
+        - input_size: input window size
+        - hidden_sizes: list with the number of neurons in each hidden layer
+        - output_size: number of steps ahead to predict
+        - dropout_rate: dropout rate for regularization
+        - activation: activation function ('relu', 'tanh', 'leaky_relu')
         """
         super(MLPModel, self).__init__()
         
@@ -26,31 +26,31 @@ class MLPModel(nn.Module):
         self.dropout_rate = dropout_rate
         self.activation = activation
         
-        # Criar camadas da rede
+        # Create network layers
         layers = []
         
-        # Primeira camada
+        # First layer
         layers.append(nn.Linear(input_size, hidden_sizes[0]))
         layers.append(self._get_activation())
         layers.append(nn.Dropout(dropout_rate))
         
-        # Camadas ocultas
+        # Hidden layers
         for i in range(len(hidden_sizes) - 1):
             layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1]))
             layers.append(self._get_activation())
             layers.append(nn.Dropout(dropout_rate))
         
-        # Camada de saída
+        # Output layer
         layers.append(nn.Linear(hidden_sizes[-1], output_size))
         
         self.network = nn.Sequential(*layers)
         
-        # Inicializar pesos
+        # Initialize weights
         self._initialize_weights()
     
     def _get_activation(self):
         """
-        Retorna a função de ativação escolhida
+        Returns the chosen activation function
         """
         if self.activation == 'relu':
             return nn.ReLU()
@@ -59,11 +59,11 @@ class MLPModel(nn.Module):
         elif self.activation == 'leaky_relu':
             return nn.LeakyReLU(0.1)
         else:
-            return nn.ReLU()  # padrão
+            return nn.ReLU()  # default
     
     def _initialize_weights(self):
         """
-        Inicializa os pesos da rede
+        Initialize network weights
         """
         for module in self.modules():
             if isinstance(module, nn.Linear):
@@ -73,9 +73,9 @@ class MLPModel(nn.Module):
     
     def forward(self, x):
         """
-        Forward pass da rede
+        Forward pass of the network
         """
-        # Flatten da entrada se necessário
+        # Flatten input if necessary
         if len(x.shape) > 2:
             x = x.view(x.size(0), -1)
         
@@ -83,7 +83,7 @@ class MLPModel(nn.Module):
     
     def get_model_info(self):
         """
-        Retorna informações sobre o modelo
+        Returns information about the model
         """
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -103,26 +103,26 @@ class MLPModel(nn.Module):
     
     def print_model_summary(self):
         """
-        Imprime um resumo do modelo
+        Print a model summary
         """
         info = self.get_model_info()
         print("=" * 50)
-        print("RESUMO DO MODELO MLP")
+        print("MLP MODEL SUMMARY")
         print("=" * 50)
-        print(f"Tipo: {info['model_type']}")
-        print(f"Tamanho da entrada: {info['input_size']}")
-        print(f"Camadas ocultas: {info['hidden_sizes']}")
-        print(f"Tamanho da saída: {info['output_size']}")
-        print(f"Taxa de dropout: {info['dropout_rate']}")
-        print(f"Função de ativação: {info['activation']}")
-        print(f"Total de parâmetros: {info['total_parameters']:,}")
-        print(f"Parâmetros treináveis: {info['trainable_parameters']:,}")
+        print(f"Type: {info['model_type']}")
+        print(f"Input size: {info['input_size']}")
+        print(f"Hidden layers: {info['hidden_sizes']}")
+        print(f"Output size: {info['output_size']}")
+        print(f"Dropout rate: {info['dropout_rate']}")
+        print(f"Activation function: {info['activation']}")
+        print(f"Total parameters: {info['total_parameters']:,}")
+        print(f"Trainable parameters: {info['trainable_parameters']:,}")
         print("=" * 50)
 
 
 def create_mlp_variants():
     """
-    Cria diferentes variações do modelo MLP para experimentação
+    Create different MLP model variations for experimentation
     """
     variants = {
         'mlp_small': MLPModel(

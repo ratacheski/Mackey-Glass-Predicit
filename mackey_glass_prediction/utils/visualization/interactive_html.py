@@ -1,5 +1,5 @@
 """
-Módulo para geração de relatórios HTML interativos e didáticos
+Interactive HTML report generation module
 """
 import os
 import numpy as np
@@ -7,7 +7,7 @@ from datetime import datetime
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 def get_html_styles():
-    """Retorna os estilos CSS para o relatório HTML"""
+    """Returns CSS styles for the HTML report"""
     return """
     <style>
         * {
@@ -651,7 +651,7 @@ def get_html_scripts():
         // Inicialização quando a página carrega
         document.addEventListener('DOMContentLoaded', function() {
             // Mostrar primeira seção por padrão
-            showSection('resumo');
+            showSection('summary');
             
             // Configurar modal
             setupModalEvents();
@@ -716,30 +716,30 @@ def get_html_scripts():
         // Executar após carregamento completo
         window.addEventListener('load', function() {
             highlightBestMetrics();
-            console.log('🎉 Relatório HTML Interativo totalmente carregado!');
+            console.log('🎉 Interactive HTML Report fully loaded!');
         });
     </script>
     """
 
 def get_metric_explanations():
-    """Retorna explicações detalhadas das métricas"""
+    """Returns detailed metric explanations"""
     return {
         'r2': {
-            'name': 'R² (Coeficiente de Determinação)',
+            'name': 'R² (Coefficient of Determination)',
             'icon': '📊',
             'explanation': '''
-            O R² mede o quão bem o modelo explica a variabilidade dos dados.
+            R² measures how well the model explains the data variability.
             <br><br>
-            <strong>Interpretação:</strong>
+            <strong>Interpretation:</strong>
             <ul>
-                <li><strong>R² = 1.0:</strong> Predição perfeita</li>
-                <li><strong>R² > 0.9:</strong> Excelente</li>
-                <li><strong>R² > 0.8:</strong> Bom</li>
-                <li><strong>R² > 0.6:</strong> Moderado</li>
-                <li><strong>R² < 0.6:</strong> Baixo</li>
+                <li><strong>R² = 1.0:</strong> Perfect prediction</li>
+                <li><strong>R² > 0.9:</strong> Excellent</li>
+                <li><strong>R² > 0.8:</strong> Good</li>
+                <li><strong>R² > 0.6:</strong> Moderate</li>
+                <li><strong>R² < 0.6:</strong> Low</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> R² = 1 - (SSres / SStot)
+            <strong>Formula:</strong> R² = 1 - (SSres / SStot)
             ''',
             'ranges': {
                 'excellent': 0.9,
@@ -748,119 +748,119 @@ def get_metric_explanations():
             }
         },
         'rmse': {
-            'name': 'RMSE (Raiz do Erro Quadrático Médio)',
+            'name': 'RMSE (Root Mean Square Error)',
             'icon': '📏',
             'explanation': '''
-            O RMSE mede a magnitude típica dos erros de predição.
+            RMSE measures the typical magnitude of prediction errors.
             <br><br>
-            <strong>Características:</strong>
+            <strong>Characteristics:</strong>
             <ul>
-                <li>Unidade igual aos dados originais</li>
-                <li>Penaliza erros grandes mais severamente</li>
-                <li>Valores menores indicam melhor performance</li>
-                <li>Sensível a outliers</li>
+                <li>Same unit as original data</li>
+                <li>Penalizes large errors more severely</li>
+                <li>Lower values indicate better performance</li>
+                <li>Sensitive to outliers</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> RMSE = √(Σ(yi - ŷi)² / n)
+            <strong>Formula:</strong> RMSE = √(Σ(yi - ŷi)² / n)
             '''
         },
         'mae': {
-            'name': 'MAE (Erro Absoluto Médio)',
+            'name': 'MAE (Mean Absolute Error)',
             'icon': '📐',
             'explanation': '''
-            O MAE mede o erro médio absoluto entre predições e valores reais.
+            MAE measures the mean absolute error between predictions and actual values.
             <br><br>
-            <strong>Características:</strong>
+            <strong>Characteristics:</strong>
             <ul>
-                <li>Mais robusto a outliers que RMSE</li>
-                <li>Interpretação intuitiva</li>
-                <li>Unidade igual aos dados originais</li>
-                <li>Sempre não-negativo</li>
+                <li>More robust to outliers than RMSE</li>
+                <li>Intuitive interpretation</li>
+                <li>Same unit as original data</li>
+                <li>Always non-negative</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> MAE = Σ|yi - ŷi| / n
+            <strong>Formula:</strong> MAE = Σ|yi - ŷi| / n
             '''
         },
         'mse': {
-            'name': 'MSE (Erro Quadrático Médio)',
+            'name': 'MSE (Mean Square Error)',
             'icon': '📈',
             'explanation': '''
-            O MSE mede a média dos quadrados dos erros de predição.
+            MSE measures the mean of squared prediction errors.
             <br><br>
-            <strong>Características:</strong>
+            <strong>Characteristics:</strong>
             <ul>
-                <li>Base para cálculo do RMSE</li>
-                <li>Penaliza erros grandes quadraticamente</li>
-                <li>Sempre não-negativo</li>
-                <li>Unidade quadrática dos dados originais</li>
+                <li>Base for RMSE calculation</li>
+                <li>Penalizes large errors quadratically</li>
+                <li>Always non-negative</li>
+                <li>Squared unit of original data</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> MSE = Σ(yi - ŷi)² / n
+            <strong>Formula:</strong> MSE = Σ(yi - ŷi)² / n
             '''
         },
         'mape': {
-            'name': 'MAPE (Erro Percentual Absoluto Médio)',
+            'name': 'MAPE (Mean Absolute Percentage Error)',
             'icon': '📊',
             'explanation': '''
-            O MAPE expressa o erro como percentual dos valores reais.
+            MAPE expresses error as a percentage of actual values.
             <br><br>
-            <strong>Interpretação:</strong>
+            <strong>Interpretation:</strong>
             <ul>
-                <li><strong>MAPE < 5%:</strong> Excelente precisão</li>
-                <li><strong>MAPE < 10%:</strong> Boa precisão</li>
-                <li><strong>MAPE < 20%:</strong> Precisão moderada</li>
-                <li><strong>MAPE ≥ 20%:</strong> Baixa precisão</li>
+                <li><strong>MAPE < 5%:</strong> Excellent accuracy</li>
+                <li><strong>MAPE < 10%:</strong> Good accuracy</li>
+                <li><strong>MAPE < 20%:</strong> Moderate accuracy</li>
+                <li><strong>MAPE ≥ 20%:</strong> Low accuracy</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> MAPE = (100/n) × Σ|yi - ŷi|/|yi|
+            <strong>Formula:</strong> MAPE = (100/n) × Σ|yi - ŷi|/|yi|
             '''
         },
         'eqmn1': {
-            'name': 'EQMN1 (Erro Quadrático Médio Normalizado - Variância)',
+            'name': 'NMSE1 (Normalized Mean Square Error - Variance)',
             'icon': '📊',
             'explanation': '''
-            O EQMN1 normaliza o MSE pela variância dos valores reais.
+            NMSE1 normalizes MSE by the variance of actual values.
             <br><br>
-            <strong>Características:</strong>
+            <strong>Characteristics:</strong>
             <ul>
-                <li>Normalizado entre 0 e 1</li>
-                <li>Independente da escala dos dados</li>
-                <li>Útil para comparação entre datasets</li>
-                <li>Valores menores indicam melhor performance</li>
+                <li>Normalized between 0 and 1</li>
+                <li>Scale-independent</li>
+                <li>Useful for comparison across datasets</li>
+                <li>Lower values indicate better performance</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> EQMN1 = MSE / Var(y_true)
+            <strong>Formula:</strong> NMSE1 = MSE / Var(y_true)
             '''
         },
         'eqmn2': {
-            'name': 'EQMN2 (Erro Quadrático Médio Normalizado - Modelo Naive)',
+            'name': 'NMSE2 (Normalized Mean Square Error - Naive Model)',
             'icon': '📉',
             'explanation': '''
-            O EQMN2 normaliza o MSE pelo MSE de um modelo naive (persistence).
+            NMSE2 normalizes MSE by the MSE of a naive model (persistence).
             <br><br>
-            <strong>Características:</strong>
+            <strong>Characteristics:</strong>
             <ul>
-                <li>Compara com modelo naive que usa valor anterior</li>
-                <li>Ideal para séries temporais</li>
-                <li>Valores < 1 indicam que o modelo supera a persistência</li>
-                <li>Valores > 1 indicam que o modelo é pior que usar valor anterior</li>
+                <li>Compares with naive model using previous value</li>
+                <li>Ideal for time series</li>
+                <li>Values < 1 indicate model outperforms persistence</li>
+                <li>Values > 1 indicate model performs worse than using previous value</li>
             </ul>
             <br>
-            <strong>Fórmula:</strong> EQMN2 = MSE / MSE_naive
+            <strong>Formula:</strong> NMSE2 = MSE / MSE_naive
             <br>
-            <strong>Interpretação:</strong>
+            <strong>Interpretation:</strong>
             <ul>
-                <li><strong>< 0.5:</strong> Muito superior ao modelo naive</li>
-                <li><strong>0.5-1.0:</strong> Superior ao modelo naive</li>
-                <li><strong>= 1.0:</strong> Equivalente ao modelo naive</li>
-                <li><strong>> 1.0:</strong> Inferior ao modelo naive</li>
+                <li><strong>< 0.5:</strong> Much superior to naive model</li>
+                <li><strong>0.5-1.0:</strong> Superior to naive model</li>
+                <li><strong>= 1.0:</strong> Equivalent to naive model</li>
+                <li><strong>> 1.0:</strong> Inferior to naive model</li>
             </ul>
             '''
         }
     }
 
 def calculate_metrics(actuals, predictions):
-    """Calcula todas as métricas para um modelo"""
+    """Calculate all metrics for a model"""
     actuals = np.array(actuals).flatten()
     predictions = np.array(predictions).flatten()
     
@@ -870,15 +870,15 @@ def calculate_metrics(actuals, predictions):
     mae = mean_absolute_error(actuals, predictions)
     mape = np.mean(np.abs((actuals - predictions) / actuals)) * 100 if np.all(actuals != 0) else np.nan
     
-    # Calcular EQMN1 (MSE normalizado pela variância)
+    # Calculate EQMN1 (MSE normalized by variance)
     var_actuals = np.var(actuals)
     eqmn1 = mse / var_actuals if var_actuals != 0 else np.nan
     
-    # Calcular EQMN2 (MSE normalizado pelo MSE naive/persistence)
+    # Calculate EQMN2 (MSE normalized by naive/persistence MSE)
     if len(actuals) > 1:
-        # Modelo naive: usar valor anterior como predição
+        # Naive model: use previous value as prediction
         x_pa = np.roll(actuals, 1)
-        x_pa[0] = actuals[0]  # Primeiro valor permanece igual
+        x_pa[0] = actuals[0]  # First value remains the same
         
         naive_mse = np.mean((x_pa - actuals) ** 2)
         eqmn2 = mse / naive_mse if naive_mse != 0 else np.nan
@@ -896,63 +896,63 @@ def calculate_metrics(actuals, predictions):
     }
 
 def get_metric_status(metric_name, value):
-    """Determina o status de uma métrica"""
+    """Determine the status of a metric"""
     explanations = get_metric_explanations()
     
     if metric_name == 'r2':
         if value >= 0.9:
-            return 'status-excellent', 'Excelente'
+            return 'status-excellent', 'Excellent'
         elif value >= 0.8:
-            return 'status-good', 'Bom'
+            return 'status-good', 'Good'
         elif value >= 0.6:
-            return 'status-warning', 'Moderado'
+            return 'status-warning', 'Moderate'
         else:
-            return 'status-poor', 'Baixo'
+            return 'status-poor', 'Low'
     
     elif metric_name == 'mape' and not np.isnan(value):
         if value < 5:
-            return 'status-excellent', 'Excelente'
+            return 'status-excellent', 'Excellent'
         elif value < 10:
-            return 'status-good', 'Bom'
+            return 'status-good', 'Good'
         elif value < 20:
-            return 'status-warning', 'Moderado'
+            return 'status-warning', 'Moderate'
         else:
-            return 'status-poor', 'Baixo'
+            return 'status-poor', 'Low'
     
-    # Para RMSE e MAE, o status depende do contexto relativo
+    # For RMSE and MAE, status depends on relative context
     return 'status-good', 'Normal'
 
 def generate_interactive_html_report(results_dict, generated_files, save_path, report_type="comparison"):
     """
-    Gera relatório HTML interativo e didático
+    Generate interactive and didactic HTML report
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
-        generated_files: Dicionário com caminhos dos arquivos gerados
-        save_path: Caminho para salvar o relatório HTML
-        report_type: Tipo do relatório ("single" ou "comparison")
+        results_dict: Dictionary with model results
+        generated_files: Dictionary with generated file paths
+        save_path: Path to save the HTML report
+        report_type: Report type ("single" or "comparison")
     """
     explanations = get_metric_explanations()
-    timestamp = datetime.now().strftime('%d/%m/%Y às %H:%M:%S')
+    timestamp = datetime.now().strftime('%d/%m/%Y at %H:%M:%S')
     
-    # Cabeçalho HTML
+    # HTML header
     html_content = f"""
     <!DOCTYPE html>
-    <html lang="pt-BR">
+    <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Relatório Interativo - Análise de Modelos de Machine Learning</title>
+        <title>Interactive Report - Machine Learning Model Analysis</title>
         {get_html_styles()}
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>🧠 Relatório Interativo de Machine Learning</h1>
-                <div class="timestamp">📅 Gerado em: {timestamp}</div>
+                <h1>🧠 Interactive Machine Learning Report</h1>
+                <div class="timestamp">📅 Generated on: {timestamp}</div>
                 
                 <div class="author-info">
-                    <h3>👨‍🎓 Autor</h3>
+                    <h3>👨‍🎓 Author</h3>
                     <div class="info-row">
                         <div class="info-item">
                             <span>👤</span>
@@ -966,7 +966,7 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                     <div class="info-row">
                         <div class="info-item">
                             <span>🎓</span>
-                            Mestrando em Engenharia Elétrica e de Computação
+                            MSc Student in Electrical and Computer Engineering
                         </div>
                         <div class="info-item">
                             <span>🏛️</span>
@@ -976,59 +976,59 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                     <div class="info-row">
                         <div class="info-item">
                             <span>📚</span>
-                            Disciplina: Redes Neurais Profundas
+                            Course: Deep Neural Networks
                         </div>
                         <div class="info-item">
                             <span>📅</span>
-                            Período: 2025/1
+                            Period: 2025/1
                         </div>
                         <div class="info-item">
                             <span>📝</span>
-                            Trabalho Computacional 2
+                            Computational Assignment 2
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="navigation">
-                <a href="#" class="nav-btn" onclick="showSection('resumo')">📋 Resumo Executivo</a>
-                <a href="#" class="nav-btn" onclick="showSection('metricas')">📊 Métricas Detalhadas</a>
-                <a href="#" class="nav-btn" onclick="showSection('graficos')">📈 Visualizações</a>
-                <a href="#" class="nav-btn" onclick="showSection('analises')">🔬 Análises Estatísticas</a>
-                <a href="#" class="nav-btn" onclick="showSection('guia')">📚 Guia de Métricas</a>
+                <a href="#" class="nav-btn" onclick="showSection('summary')">📋 Executive Summary</a>
+                <a href="#" class="nav-btn" onclick="showSection('metrics')">📊 Detailed Metrics</a>
+                <a href="#" class="nav-btn" onclick="showSection('charts')">📈 Visualizations</a>
+                <a href="#" class="nav-btn" onclick="showSection('analyses')">🔬 Statistical Analyses</a>
+                <a href="#" class="nav-btn" onclick="showSection('guide')">📚 Metrics Guide</a>
             </div>
             
             <div class="content">
     """
     
-    # Seção Resumo Executivo
+    # Executive Summary Section
     html_content += f"""
-                <div id="resumo" class="section">
-                    <h2>📋 Resumo Executivo</h2>
+                <div id="summary" class="section">
+                    <h2>📋 Executive Summary</h2>
                     
                     <div class="highlight-box">
-                        <h3><span class="info-icon">ℹ️</span>Informações Gerais</h3>
-                        <p><strong>Tipo de análise:</strong> {'Comparação de múltiplos modelos' if report_type == 'comparison' else 'Análise de modelo único'}</p>
-                        <p><strong>Número de modelos:</strong> {len(results_dict)}</p>
-                        <p><strong>Modelos analisados:</strong> {', '.join(results_dict.keys())}</p>
-                        <p><strong>Data de geração:</strong> {timestamp}</p>
+                        <h3><span class="info-icon">ℹ️</span>General Information</h3>
+                        <p><strong>Analysis type:</strong> {'Multi-model comparison' if report_type == 'comparison' else 'Single model analysis'}</p>
+                        <p><strong>Number of models:</strong> {len(results_dict)}</p>
+                        <p><strong>Models analyzed:</strong> {', '.join(results_dict.keys())}</p>
+                        <p><strong>Generation date:</strong> {timestamp}</p>
                     </div>
     """
     
     if report_type == "comparison" and len(results_dict) > 1:
-        # Ranking dos modelos
+        # Model ranking
         model_rankings = []
         for model_name, results in results_dict.items():
             if 'actuals' in results and 'predictions' in results:
                 metrics = calculate_metrics(results['actuals'], results['predictions'])
-                score = metrics['r2']  # Usar R² como métrica principal para ranking
+                score = metrics['r2']  # Use R² as main ranking metric
                 model_rankings.append((model_name, score, metrics))
         
         model_rankings.sort(key=lambda x: x[1], reverse=True)
         
         html_content += """
                     <div class="model-comparison">
-                        <h3><span class="success-icon">🏆</span>Ranking dos Modelos</h3>
+                        <h3><span class="success-icon">🏆</span>Model Ranking</h3>
         """
         
         for rank, (model_name, score, metrics) in enumerate(model_rankings, 1):
@@ -1048,20 +1048,20 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                 </div>
     """
     
-    # Seção Métricas Detalhadas
+    # Detailed Metrics Section
     html_content += """
-                <div id="metricas" class="section">
-                    <h2>📊 Métricas Detalhadas</h2>
+                <div id="metrics" class="section">
+                    <h2>📊 Detailed Metrics</h2>
                     
                     <div class="tabs">
-                        <button class="tab active" onclick="showTab('metricas-visao-geral')">Visão Geral</button>
-                        <button class="tab" onclick="showTab('metricas-detalhadas')">Análise Detalhada</button>
+                        <button class="tab active" onclick="showTab('metrics-overview')">Overview</button>
+                        <button class="tab" onclick="showTab('detailed-metrics')">Detailed Analysis</button>
                     </div>
                     
-                    <div id="metricas-visao-geral" class="tab-content active">
+                    <div id="metrics-overview" class="tab-content active">
     """
     
-    # Cards de métricas para cada modelo
+    # Metric cards for each model
     for model_name, results in results_dict.items():
         if 'actuals' in results and 'predictions' in results:
             metrics = calculate_metrics(results['actuals'], results['predictions'])
@@ -1071,7 +1071,7 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                         <div class="metric-grid">
             """
             
-            # Card R²
+            # R² Card
             r2_status_class, r2_status_text = get_metric_status('r2', metrics['r2'])
             html_content += f"""
                             <div class="metric-card">
@@ -1089,7 +1089,7 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                             </div>
             """
             
-            # Card RMSE
+            # RMSE Card
             html_content += f"""
                             <div class="metric-card">
                                 <div class="metric-title">
@@ -1099,14 +1099,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-value" style="color: #3498db">
                                     {metrics['rmse']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor é melhor</div>
+                                <div class="metric-explanation">Lower is better</div>
                                 <div id="rmse-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['rmse']['explanation']}
                                 </div>
                             </div>
             """
             
-            # Card MAE
+            # MAE Card
             html_content += f"""
                             <div class="metric-card">
                                 <div class="metric-title">
@@ -1116,14 +1116,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-value" style="color: #9b59b6">
                                     {metrics['mae']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor é melhor</div>
+                                <div class="metric-explanation">Lower is better</div>
                                 <div id="mae-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['mae']['explanation']}
                                 </div>
                             </div>
             """
             
-            # Card MSE
+            # MSE Card
             html_content += f"""
                             <div class="metric-card">
                                 <div class="metric-title">
@@ -1133,14 +1133,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-value" style="color: #3498db">
                                     {metrics['mse']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor é melhor</div>
+                                <div class="metric-explanation">Lower is better</div>
                                 <div id="mse-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['mse']['explanation']}
                                 </div>
                             </div>
             """
             
-            # Card MAPE (se disponível)
+            # MAPE Card (if available)
             if not np.isnan(metrics['mape']):
                 mape_status_class, mape_status_text = get_metric_status('mape', metrics['mape'])
                 html_content += f"""
@@ -1159,7 +1159,7 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                             </div>
                 """
             
-            # Card EQMN1
+            # NMSE1 Card
             if not np.isnan(metrics['eqmn1']):
                 html_content += f"""
                             <div class="metric-card">
@@ -1170,14 +1170,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn1'] < 0.1 else '#f39c12' if metrics['eqmn1'] < 0.5 else '#e74c3c'}">
                                     {metrics['eqmn1']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor é melhor (normalizado)</div>
+                                <div class="metric-explanation">Lower is better (normalized)</div>
                                 <div id="eqmn1-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['eqmn1']['explanation']}
                                 </div>
                             </div>
                 """
             
-            # Card EQMN2
+            # NMSE2 Card
             if not np.isnan(metrics['eqmn2']):
                 html_content += f"""
                             <div class="metric-card">
@@ -1188,7 +1188,7 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                                 <div class="metric-value" style="color: {'#27ae60' if metrics['eqmn2'] < 0.5 else '#2ecc71' if metrics['eqmn2'] < 1.0 else '#f39c12' if metrics['eqmn2'] < 2.0 else '#e74c3c'}">
                                     {metrics['eqmn2']:.6f}
                                 </div>
-                                <div class="metric-explanation">Menor que 1.0 é melhor (supera modelo naive)</div>
+                                <div class="metric-explanation">Less than 1.0 is better (outperforms naive model)</div>
                                 <div id="eqmn2-explanation-{model_name.replace(" ", "_")}" class="explanation-panel">
                                     {explanations['eqmn2']['explanation']}
                                 </div>
@@ -1202,18 +1202,18 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
     html_content += """
                     </div>
                     
-                    <div id="metricas-detalhadas" class="tab-content">
+                    <div id="detailed-metrics" class="tab-content">
                         <div class="highlight-box">
-                            <h3><span class="info-icon">📚</span>Interpretação Avançada das Métricas</h3>
-                            <p>Esta seção oferece uma análise mais profunda do significado de cada métrica no contexto do seu modelo de machine learning.</p>
+                            <h3><span class="info-icon">📚</span>Advanced Interpretation of Metrics</h3>
+                            <p>This section provides a deeper analysis of the meaning of each metric in the context of your machine learning model.</p>
                         </div>
                         
-                        <h4>🎯 Como Interpretar os Resultados</h4>
+                        <h4>🎯 How to Interpret the Results</h4>
                         <ul>
-                            <li><strong>R² próximo de 1:</strong> Indica que o modelo explica quase toda a variabilidade dos dados</li>
-                            <li><strong>RMSE baixo:</strong> Erros de predição pequenos em relação à escala dos dados</li>
-                            <li><strong>MAE baixo:</strong> Erro médio absoluto pequeno, mais robusto a outliers</li>
-                            <li><strong>MAPE baixo:</strong> Erro percentual pequeno, útil para comparação entre diferentes escalas</li>
+                            <li><strong>R² close to 1:</strong> Indicates that the model explains almost all of the data variability</li>
+                            <li><strong>RMSE low:</strong> Small prediction errors relative to data scale</li>
+                            <li><strong>MAE low:</strong> Small mean absolute error, more robust to outliers</li>
+                            <li><strong>MAPE low:</strong> Small percentage error, useful for comparison between different scales</li>
                         </ul>
                     </div>
                 </div>
@@ -1221,21 +1221,21 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
     
     # Seção de Visualizações
     html_content += """
-                <div id="graficos" class="section">
-                    <h2>📈 Visualizações</h2>
+                <div id="charts" class="section">
+                    <h2>📈 Visualizations</h2>
                     
                     <div class="highlight-box">
-                        <h3><span class="info-icon">📊</span>Gráficos Explicativos</h3>
-                        <p>Os gráficos abaixo mostram diferentes aspectos da performance dos modelos. Clique em cada imagem para visualizar em tela cheia.</p>
+                        <h3><span class="info-icon">📊</span>Explanation Graphics</h3>
+                        <p>The graphics below show different aspects of model performance. Click on each image to view in full screen.</p>
                     </div>
                     
                     <div class="tabs">
-                        <button class="tab active" onclick="showTab('graficos-comparativos')">📊 Gráficos Comparativos</button>
-                        <button class="tab" onclick="showTab('graficos-individuais')">🔍 Análises Individuais</button>
+                        <button class="tab active" onclick="showTab('comparison-graphics')">📊 Comparison Graphics</button>
+                        <button class="tab" onclick="showTab('individual-analyses')">🔍 Individual Analyses</button>
                     </div>
                     
-                    <div id="graficos-comparativos" class="tab-content active">
-                        <h3>🌐 Análises Comparativas</h3>
+                    <div id="comparison-graphics" class="tab-content active">
+                        <h3>🌐 Comparison Analyses</h3>
                         <div class="metric-grid">
     """
     
@@ -1246,9 +1246,9 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
             file_name = os.path.basename(file_path)
             
             title_map = {
-                'overview': '🌐 Visão Geral Comparativa',
-                'metrics_comparison': '📊 Comparação de Métricas',
-                'metrics_table': '📋 Tabela de Métricas'
+                'overview': '🌐 General Comparison View',
+                'metrics_comparison': '📊 Metrics Comparison',
+                'metrics_table': '📋 Metrics Table'
             }
             
             title = title_map.get(file_key.split('_')[0], file_name.replace('_', ' ').replace('.png', '').title())
@@ -1264,8 +1264,8 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                         </div>
                     </div>
                     
-                    <div id="graficos-individuais" class="tab-content">
-                        <h3>🔍 Análises por Modelo</h3>
+                    <div id="individual-analyses" class="tab-content">
+                        <h3>🔍 Individual Analyses</h3>
     """
     
     # Organizar gráficos por modelo
@@ -1295,14 +1295,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                 
                 # Títulos mais descritivos
                 title_map = {
-                    'training': '📈 Histórico de Treinamento',
-                    'predictions': '🎯 Predições vs Valores Reais',
-                    'qq': '📊 Análise Q-Q Plot',
-                    'cdf': '📋 Função de Distribuição Acumulada',
-                    'pdf': '📊 Função de Densidade de Probabilidade',
-                    'ks': '🔬 Teste Kolmogorov-Smirnov',
-                    'residuals': '📉 Análise de Resíduos',
-                    'autocorr': '🔄 Autocorrelação'
+                    'training': '📈 Training History',
+                    'predictions': '🎯 Predictions vs Actual Values',
+                    'qq': '📊 Q-Q Plot Analysis',
+                    'cdf': '📋 Cumulative Distribution Function',
+                    'pdf': '📊 Probability Density Function',
+                    'ks': '🔬 Kolmogorov-Smirnov Test',
+                    'residuals': '📉 Residuals Analysis',
+                    'autocorr': '🔄 Autocorrelation'
                 }
                 
                 # Identificar tipo do gráfico
@@ -1344,45 +1344,45 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
     
     # Seção de Análises Estatísticas
     html_content += """
-                <div id="analises" class="section">
-                    <h2>🔬 Análises Estatísticas</h2>
+                <div id="analyses" class="section">
+                    <h2>📈 Statistical Analysis</h2>
                     
                     <div class="highlight-box">
-                        <h3><span class="info-icon">🧪</span>Testes e Análises Avançadas</h3>
-                        <p>Esta seção apresenta análises estatísticas aprofundadas dos resultados do modelo.</p>
+                        <h3><span class="info-icon">🧪</span>Advanced Tests and Analyses</h3>
+                        <p>This section presents in-depth statistical analyses of model results.</p>
                     </div>
                     
-                    <h3>📊 Análises Disponíveis</h3>
+                    <h3>📊 Available Analyses</h3>
                     <div class="metric-grid">
                         <div class="metric-card">
                             <div class="metric-title">📊 Q-Q Plot</div>
                             <div class="metric-explanation">
-                                Compara a distribuição dos resíduos com a distribuição normal. 
-                                Pontos próximos à linha diagonal indicam normalidade dos resíduos.
+                                Compares the residuals distribution with the normal distribution. 
+                                Points close to the diagonal line indicate normal residuals.
                             </div>
                         </div>
                         
                         <div class="metric-card">
-                            <div class="metric-title">📈 Análise de Distribuições</div>
+                            <div class="metric-title">📈 Distribution Analysis</div>
                             <div class="metric-explanation">
-                                Compara as funções de distribuição (CDF) e densidade (PDF) entre 
-                                valores reais e predições.
+                                Compares the distribution functions (CDF) and densities (PDF) between 
+                                actual values and predictions.
                             </div>
                         </div>
                         
                         <div class="metric-card">
-                            <div class="metric-title">🔬 Teste Kolmogorov-Smirnov</div>
+                            <div class="metric-title">🔬 Kolmogorov-Smirnov Test</div>
                             <div class="metric-explanation">
-                                Testa se as distribuições de valores reais e predições são 
-                                estatisticamente similares.
+                                Tests if the distributions of actual values and predictions are 
+                                statistically similar.
                             </div>
                         </div>
                         
                         <div class="metric-card">
-                            <div class="metric-title">🔄 Análise de Autocorrelação</div>
+                            <div class="metric-title">🔄 Autocorrelation Analysis</div>
                             <div class="metric-explanation">
-                                Examina a dependência temporal nos dados, importante para 
-                                séries temporais.
+                                Examines temporal dependence in data, important for 
+                                time series.
                             </div>
                         </div>
                     </div>
@@ -1391,12 +1391,12 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
     
     # Seção Guia de Métricas
     html_content += """
-                <div id="guia" class="section">
-                    <h2>📚 Guia Completo de Métricas</h2>
+                <div id="guide" class="section">
+                    <h2>📚 Metrics Guide</h2>
                     
                     <div class="highlight-box">
-                        <h3><span class="info-icon">🎓</span>Aprenda sobre Métricas de Machine Learning</h3>
-                        <p>Este guia explica em detalhes todas as métricas utilizadas na avaliação dos modelos.</p>
+                        <h3><span class="info-icon">🎓</span>Learn About Machine Learning Metrics</h3>
+                        <p>This guide explains all metrics used in model evaluation in detail.</p>
                     </div>
                     
                     <div class="metric-grid">
@@ -1419,13 +1419,13 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
                     </div>
                     
                     <div class="highlight-box">
-                        <h3><span class="success-icon">💡</span>Dicas de Interpretação</h3>
+                        <h3><span class="success-icon">💡</span>Interpretation Tips</h3>
                         <ul>
-                            <li><strong>Use múltiplas métricas:</strong> Cada métrica oferece uma perspectiva diferente</li>
-                            <li><strong>Considere o contexto:</strong> A importância de cada métrica depende da aplicação</li>
-                            <li><strong>Analise os resíduos:</strong> Padrões nos erros podem revelar problemas no modelo</li>
-                            <li><strong>Compare com baselines:</strong> Avalie se o modelo supera métodos simples</li>
-                            <li><strong>Valide em dados novos:</strong> Performance em teste é crucial</li>
+                            <li><strong>Use multiple metrics:</strong> Each metric offers a different perspective</li>
+                            <li><strong>Consider the context:</strong> The importance of each metric depends on the application</li>
+                            <li><strong>Analyze residuals:</strong> Patterns in errors can reveal problems in the model</li>
+                            <li><strong>Compare with baselines:</strong> Evaluate if the model outperforms simple methods</li>
+                            <li><strong>Validate on new data:</strong> Performance on test is crucial</li>
                         </ul>
                     </div>
                 </div>
@@ -1441,14 +1441,14 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
         <script>
             // Adicionar funcionalidade específica para este relatório
             document.addEventListener('DOMContentLoaded', function() {{
-                console.log('Relatório HTML Interativo carregado!');
+                console.log('Interactive HTML Report loaded!');
                 
                 // Adicionar contador de cliques em explicações
                 let explanationClicks = 0;
                 document.querySelectorAll('.toggle-btn').forEach(btn => {{
                     btn.addEventListener('click', function() {{
                         explanationClicks++;
-                        console.log(`Explicação visualizada ${{explanationClicks}} vezes`);
+                        console.log(`Explanation viewed ${{explanationClicks}} times`);
                     }});
                 }});
             }});
@@ -1461,5 +1461,5 @@ def generate_interactive_html_report(results_dict, generated_files, save_path, r
     with open(save_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print(f"✅ Relatório HTML interativo gerado: {save_path}")
+    print(f"✅ Interactive HTML Report generated: {save_path}")
     return save_path 

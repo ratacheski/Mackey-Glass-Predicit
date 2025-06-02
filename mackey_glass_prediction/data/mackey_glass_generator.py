@@ -6,18 +6,18 @@ import pandas as pd
 
 class MackeyGlassGenerator:
     """
-    Gerador da série temporal de Mackey-Glass
+    Mackey-Glass time series generator
     """
     
     def __init__(self, n_points=10000, tau=20, gamma=0.2, beta=0.4, n=18, x0=1):
         """
-        Parâmetros:
-        - n_points: número de pontos a gerar
-        - tau: delay (padrão 20)
-        - gamma: constante (padrão 0.2) 
-        - beta: constante (padrão 0.4)
-        - n: constante (padrão 18)
-        - x0: valor inicial (padrão 1)
+        Parameters:
+        - n_points: number of points to generate
+        - tau: delay (default 20)
+        - gamma: constant (default 0.2) 
+        - beta: constant (default 0.4)
+        - n: constant (default 18)
+        - x0: initial value (default 1)
         """
         self.n_points = n_points
         self.tau = tau
@@ -28,66 +28,66 @@ class MackeyGlassGenerator:
         
     def generate_series(self):
         """
-        Gera a série temporal de Mackey-Glass usando equação diferencial
+        Generate Mackey-Glass time series using differential equation
         """
-        # Inicializar array
+        # Initialize array
         x = np.zeros(self.n_points + self.tau)
         
-        # Condições iniciais
+        # Initial conditions
         x[0] = self.x0
         
-        # Gerar série usando equação de Mackey-Glass
+        # Generate series using Mackey-Glass equation
         for i in range(1, self.n_points + self.tau):
             if i <= self.tau:
                 x[i] = x[i-1] + (self.beta * x[0] / (1 + x[0]**self.n) - self.gamma * x[i-1])
             else:
                 x[i] = x[i-1] + (self.beta * x[i-self.tau] / (1 + x[i-self.tau]**self.n) - self.gamma * x[i-1])
         
-        # Retornar apenas os pontos válidos (depois do delay)
+        # Return only valid points (after delay)
         return x[self.tau:]
     
     def save_series(self, series, filename):
         """
-        Salva a série em arquivo CSV
+        Save series to CSV file
         """
         df = pd.DataFrame({'time': range(len(series)), 'value': series})
         df.to_csv(filename, index=False)
-        print(f"Série salva em {filename}")
+        print(f"Series saved to {filename}")
 
 class MackeyGlassDataset(Dataset):
     """
-    Dataset personalizado para série temporal de Mackey-Glass
+    Custom dataset for Mackey-Glass time series
     """
     
     def __init__(self, series, window_size=20, prediction_steps=1):
         """
-        Parâmetros:
-        - series: série temporal
-        - window_size: tamanho da janela de entrada
-        - prediction_steps: número de passos à frente para predizer
+        Parameters:
+        - series: time series
+        - window_size: input window size
+        - prediction_steps: number of steps ahead to predict
         """
         self.series = series
         self.window_size = window_size
         self.prediction_steps = prediction_steps
         
-        # Normalizar série
+        # Normalize series
         self.mean = np.mean(series)
         self.std = np.std(series)
         self.normalized_series = (series - self.mean) / self.std
         
-        # Criar janelas de dados
+        # Create data windows
         self.X, self.y = self._create_windows()
     
     def _create_windows(self):
         """
-        Cria janelas de dados para treinamento
+        Create data windows for training
         """
         X, y = [], []
         
         for i in range(len(self.normalized_series) - self.window_size - self.prediction_steps + 1):
-            # Janela de entrada
+            # Input window
             X.append(self.normalized_series[i:i + self.window_size])
-            # Valor(es) a predizer
+            # Value(s) to predict
             y.append(self.normalized_series[i + self.window_size:i + self.window_size + self.prediction_steps])
         
         return np.array(X), np.array(y)
@@ -100,13 +100,13 @@ class MackeyGlassDataset(Dataset):
     
     def denormalize(self, normalized_value):
         """
-        Desnormaliza valores preditos
+        Denormalize predicted values
         """
         return normalized_value * self.std + self.mean
     
     def get_train_test_split(self, train_ratio=0.9):
         """
-        Divide os dados em treino e teste
+        Split data into training and test sets
         """
         train_size = int(len(self) * train_ratio)
         
@@ -122,7 +122,7 @@ class MackeyGlassDataset(Dataset):
 def create_dataloaders(series, window_size=20, prediction_steps=1, 
                       train_ratio=0.9, batch_size=32, shuffle=True):
     """
-    Cria DataLoaders para treino e teste
+    Create DataLoaders for training and testing
     """
     dataset = MackeyGlassDataset(series, window_size, prediction_steps)
     (train_X, train_y), (test_X, test_y) = dataset.get_train_test_split(train_ratio)

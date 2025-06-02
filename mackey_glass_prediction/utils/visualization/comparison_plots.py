@@ -1,10 +1,10 @@
 """
-Gráficos de comparação entre modelos
+Model comparison plots
 """
 import matplotlib
-matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
+matplotlib.use('Agg')  # Non-interactive backend that only saves files
 import matplotlib.pyplot as plt
-plt.ioff()  # Desabilitar modo interativo
+plt.ioff()  # Disable interactive mode
 
 import numpy as np
 import pandas as pd
@@ -15,36 +15,36 @@ from .utils import (ensure_output_dir, print_save_message, get_colors_and_styles
 
 
 def plot_models_comparison_overview(results_dict, save_path=None,
-                                   title="Visão Geral - Comparação de Modelos"):
+                                   title="Overview - Model Comparison"):
     """
-    Visão geral comparativa de múltiplos modelos com métricas principais
+    Comparative overview of multiple models with main metrics
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
+        results_dict: Dictionary with model results
+        save_path: Path to save the plot
+        title: Plot title
     """
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
     
-    # Validar e limpar dados
+    # Validate and clean data
     clean_results = validate_and_clean_metrics(results_dict)
     
     if not clean_results:
-        fig.text(0.5, 0.5, 'Dados insuficientes para comparação', 
+        fig.text(0.5, 0.5, 'Insufficient data for comparison', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
         plt.tight_layout()
         if save_path:
             ensure_output_dir(save_path)
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print_save_message(save_path, "Comparação de modelos")
-        plt.close()  # Fechar figura para liberar memória
+            print_save_message(save_path, "Model comparison")
+        plt.close()  # Close figure to free memory
         return
     
     colors, _ = get_colors_and_styles(len(clean_results))
     model_names = list(clean_results.keys())
     
-    # Calcular métricas principais
+    # Calculate main metrics
     metrics_data = {}
     for model_name, results in clean_results.items():
         if 'actuals' in results and 'predictions' in results:
@@ -59,7 +59,7 @@ def plot_models_comparison_overview(results_dict, save_path=None,
             }
     
     # ===== SUBPLOT 1: R² =====
-    ax1.set_title('Coeficiente de Determinação (R²)', fontsize=14, fontweight='bold')
+    ax1.set_title('Coefficient of Determination (R²)', fontsize=14, fontweight='bold')
     r2_values = [metrics_data[name]['R²'] for name in model_names if name in metrics_data]
     valid_names = [name for name in model_names if name in metrics_data]
     
@@ -69,19 +69,19 @@ def plot_models_comparison_overview(results_dict, save_path=None,
     ax1.grid(True, alpha=0.3, axis='y')
     ax1.set_ylim(0, 1)
     
-    # Adicionar linha de referência
-    ax1.axhline(y=0.8, color='green', linestyle='--', alpha=0.7, label='Bom (0.8)')
-    ax1.axhline(y=0.9, color='darkgreen', linestyle='--', alpha=0.7, label='Excelente (0.9)')
+    # Add reference lines
+    ax1.axhline(y=0.8, color='green', linestyle='--', alpha=0.7, label='Good (0.8)')
+    ax1.axhline(y=0.9, color='darkgreen', linestyle='--', alpha=0.7, label='Excellent (0.9)')
     ax1.legend(fontsize=10)
     
-    # Valores nas barras
+    # Values on bars
     for bar, val in zip(bars1, r2_values):
         height = bar.get_height()
         ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
                 f'{val:.4f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
     
     # ===== SUBPLOT 2: RMSE =====
-    ax2.set_title('Raiz do Erro Quadrático Médio (RMSE)', fontsize=14, fontweight='bold')
+    ax2.set_title('Root Mean Square Error (RMSE)', fontsize=14, fontweight='bold')
     rmse_values = [metrics_data[name]['RMSE'] for name in valid_names]
     
     bars2 = ax2.bar(valid_names, rmse_values, color=colors[:len(valid_names)], alpha=0.7)
@@ -89,14 +89,14 @@ def plot_models_comparison_overview(results_dict, save_path=None,
     ax2.tick_params(axis='x', rotation=45)
     ax2.grid(True, alpha=0.3, axis='y')
     
-    # Valores nas barras
+    # Values on bars
     for bar, val in zip(bars2, rmse_values):
         height = bar.get_height()
         ax2.text(bar.get_x() + bar.get_width()/2., height + max(rmse_values)*0.01,
                 f'{val:.4f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
     
     # ===== SUBPLOT 3: MAE =====
-    ax3.set_title('Erro Absoluto Médio (MAE)', fontsize=14, fontweight='bold')
+    ax3.set_title('Mean Absolute Error (MAE)', fontsize=14, fontweight='bold')
     mae_values = [metrics_data[name]['MAE'] for name in valid_names]
     
     bars3 = ax3.bar(valid_names, mae_values, color=colors[:len(valid_names)], alpha=0.7)
@@ -104,41 +104,41 @@ def plot_models_comparison_overview(results_dict, save_path=None,
     ax3.tick_params(axis='x', rotation=45)
     ax3.grid(True, alpha=0.3, axis='y')
     
-    # Valores nas barras
+    # Values on bars
     for bar, val in zip(bars3, mae_values):
         height = bar.get_height()
         ax3.text(bar.get_x() + bar.get_width()/2., height + max(mae_values)*0.01,
                 f'{val:.4f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
     
-    # ===== SUBPLOT 4: Ranking e Resumo =====
-    ax4.set_title('Ranking dos Modelos', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 4: Ranking and Summary =====
+    ax4.set_title('Model Ranking', fontsize=14, fontweight='bold')
     ax4.axis('off')
     
-    # Calcular ranking baseado em múltiplas métricas
+    # Calculate ranking based on multiple metrics
     model_scores = []
     for name in valid_names:
         score = 0
         metrics = metrics_data[name]
         
-        # R² (quanto maior, melhor) - peso 3
+        # R² (higher is better) - weight 3
         r2_rank = sorted(valid_names, key=lambda x: metrics_data[x]['R²'], reverse=True).index(name)
         score += (len(valid_names) - r2_rank) * 3
         
-        # RMSE (quanto menor, melhor) - peso 2
+        # RMSE (lower is better) - weight 2
         rmse_rank = sorted(valid_names, key=lambda x: metrics_data[x]['RMSE']).index(name)
         score += (len(valid_names) - rmse_rank) * 2
         
-        # MAE (quanto menor, melhor) - peso 2
+        # MAE (lower is better) - weight 2
         mae_rank = sorted(valid_names, key=lambda x: metrics_data[x]['MAE']).index(name)
         score += (len(valid_names) - mae_rank) * 2
         
         model_scores.append((name, score, metrics))
     
-    # Ordenar por score
+    # Sort by score
     model_scores.sort(key=lambda x: x[1], reverse=True)
     
-    # Criar texto do ranking
-    ranking_text = "RANKING GERAL:\n\n"
+    # Create ranking text
+    ranking_text = "GENERAL RANKING:\n\n"
     
     for rank, (name, score, metrics) in enumerate(model_scores, 1):
         medal = get_medal_emoji(rank)
@@ -160,22 +160,22 @@ def plot_models_comparison_overview(results_dict, save_path=None,
             ranking_text += f"   MAPE: {metrics['MAPE']:.2f}%\n"
         ranking_text += "\n"
     
-    # Análise do melhor modelo
+    # Best model analysis
     if model_scores:
         best_model, best_score, best_metrics = model_scores[0]
-        ranking_text += f"MELHOR MODELO: {best_model}\n"
+        ranking_text += f"BEST MODEL: {best_model}\n"
         if best_metrics['R²'] > 0.9:
-            ranking_text += "• Excelente ajuste (R² > 0.9)\n"
+            ranking_text += "• Excellent fit (R² > 0.9)\n"
         elif best_metrics['R²'] > 0.8:
-            ranking_text += "• Bom ajuste (R² > 0.8)\n"
+            ranking_text += "• Good fit (R² > 0.8)\n"
         else:
-            ranking_text += "• Ajuste moderado\n"
+            ranking_text += "• Moderate fit\n"
         
-        # Comparação com o segundo melhor
+        # Comparison with second best
         if len(model_scores) > 1:
             second_best = model_scores[1]
             r2_diff = best_metrics['R²'] - second_best[2]['R²']
-            ranking_text += f"• Vantagem sobre 2º: +{r2_diff:.4f} em R²\n"
+            ranking_text += f"• Advantage over 2nd: +{r2_diff:.4f} in R²\n"
     
     ax4.text(0.05, 0.95, ranking_text, transform=ax4.transAxes, fontsize=10,
              verticalalignment='top', fontfamily='monospace',
@@ -186,9 +186,9 @@ def plot_models_comparison_overview(results_dict, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação de modelos")
+        print_save_message(save_path, "Model comparison")
     
-    plt.close()  # Fechar figura para liberar memória
+    plt.close()  # Close figure to free memory
     
     return {
         'rankings': model_scores,
@@ -197,30 +197,30 @@ def plot_models_comparison_overview(results_dict, save_path=None,
 
 
 def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
-                               title="Comparação de Predições"):
+                               title="Predictions Comparison"):
     """
-    Compara predições de múltiplos modelos contra valores reais
+    Compare predictions from multiple models against actual values
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
-        n_show: Número de pontos a mostrar
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
+        results_dict: Dictionary with model results
+        n_show: Number of points to show
+        save_path: Path to save the plot
+        title: Plot title
     """
-    # Validar dados
+    # Validate data
     clean_results = validate_and_clean_metrics(results_dict)
     
     if not clean_results:
         plt.figure(figsize=(10, 6))
-        plt.text(0.5, 0.5, 'Dados insuficientes para comparação', 
+        plt.text(0.5, 0.5, 'Insufficient data for comparison', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.close()  # Fechar figura para liberar memória
+        plt.close()  # Close figure to free memory
         return
     
     n_models = len(clean_results)
     
-    # Criar subplots
+    # Create subplots
     if n_models <= 2:
         fig, axes = plt.subplots(1, n_models, figsize=(10*n_models, 8))
     elif n_models <= 4:
@@ -230,7 +230,7 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
         n_rows = (n_models + n_cols - 1) // n_cols
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(6*n_cols, 6*n_rows))
     
-    # Garantir que axes seja sempre um array
+    # Ensure axes is always an array
     if n_models == 1:
         axes = [axes]
     else:
@@ -248,7 +248,7 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
             actuals = np.array(results['actuals']).flatten()
             predictions = np.array(results['predictions']).flatten()
             
-            # Limitar número de pontos mostrados
+            # Limit number of points shown
             if len(actuals) > n_show:
                 indices = np.random.choice(len(actuals), n_show, replace=False)
                 actuals_show = actuals[indices]
@@ -261,34 +261,34 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
             ax.scatter(actuals_show, predictions_show, alpha=0.6, s=20, 
                       color=colors[i], edgecolors='darker', linewidth=0.5)
             
-            # Linha perfeita
+            # Perfect line
             min_val = min(np.min(actuals_show), np.min(predictions_show))
             max_val = max(np.max(actuals_show), np.max(predictions_show))
             ax.plot([min_val, max_val], [min_val, max_val], 'r-', linewidth=2, 
-                   alpha=0.8, label='Predição Perfeita')
+                   alpha=0.8, label='Perfect Prediction')
             
-            # Calcular métricas
+            # Calculate metrics
             r2 = r2_score(actuals, predictions)
             rmse = np.sqrt(mean_squared_error(actuals, predictions))
             mae = mean_absolute_error(actuals, predictions)
             
             ax.set_title(f'{model_name}', fontsize=12, fontweight='bold')
-            ax.set_xlabel('Valores Reais', fontsize=10)
-            ax.set_ylabel('Predições', fontsize=10)
+            ax.set_xlabel('Actual Values', fontsize=10)
+            ax.set_ylabel('Predictions', fontsize=10)
             ax.grid(True, alpha=0.3)
             ax.legend(fontsize=9)
             
-            # Adicionar métricas
+            # Add metrics
             metrics_text = f'R² = {r2:.4f}\nRMSE = {rmse:.4f}\nMAE = {mae:.4f}'
             ax.text(0.05, 0.95, metrics_text, transform=ax.transAxes, 
                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8),
                    verticalalignment='top', fontsize=9, fontfamily='monospace')
         else:
-            ax.text(0.5, 0.5, f'Dados não disponíveis\npara {model_name}', 
+            ax.text(0.5, 0.5, f'Data not available\nfor {model_name}', 
                    transform=ax.transAxes, ha='center', va='center',
                    bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
     
-    # Ocultar axes extras
+    # Hide extra axes
     for j in range(i+1, len(axes)):
         axes[j].set_visible(False)
     
@@ -298,36 +298,36 @@ def plot_predictions_comparison(results_dict, n_show=500, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação de predições")
+        print_save_message(save_path, "Predictions comparison")
     
-    plt.close()  # Fechar figura para liberar memória
+    plt.close()  # Close figure to free memory
 
 
 def plot_residuals_comparison(results_dict, save_path=None,
-                             title="Comparação de Resíduos"):
+                             title="Residuals Comparison"):
     """
-    Compara distribuições de resíduos de múltiplos modelos
+    Compare residual distributions from multiple models
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
+        results_dict: Dictionary with model results
+        save_path: Path to save the plot
+        title: Plot title
     """
     clean_results = validate_and_clean_metrics(results_dict)
     
     if not clean_results:
         plt.figure(figsize=(10, 6))
-        plt.text(0.5, 0.5, 'Dados insuficientes para comparação', 
+        plt.text(0.5, 0.5, 'Insufficient data for comparison', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.close()  # Fechar figura para liberar memória
+        plt.close()  # Close figure to free memory
         return
     
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
     
     colors, _ = get_colors_and_styles(len(clean_results))
     
-    # Calcular resíduos para todos os modelos
+    # Calculate residuals for all models
     residuals_data = {}
     for model_name, results in clean_results.items():
         if 'actuals' in results and 'predictions' in results:
@@ -336,68 +336,68 @@ def plot_residuals_comparison(results_dict, save_path=None,
             residuals = predictions - actuals
             residuals_data[model_name] = residuals
     
-    # ===== SUBPLOT 1: Histogramas dos Resíduos =====
-    ax1.set_title('Distribuição dos Resíduos', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 1: Residuals Histograms =====
+    ax1.set_title('Residuals Distribution', fontsize=14, fontweight='bold')
     
     for i, (model_name, residuals) in enumerate(residuals_data.items()):
         ax1.hist(residuals, bins=50, alpha=0.6, color=colors[i], 
                 label=model_name, density=True, edgecolor='darker')
     
     ax1.axvline(x=0, color='black', linestyle='--', alpha=0.8, label='Zero')
-    ax1.set_xlabel('Resíduo', fontsize=12)
-    ax1.set_ylabel('Densidade', fontsize=12)
+    ax1.set_xlabel('Residual', fontsize=12)
+    ax1.set_ylabel('Density', fontsize=12)
     ax1.legend(fontsize=10)
     ax1.grid(True, alpha=0.3)
     
-    # ===== SUBPLOT 2: Box Plots dos Resíduos =====
-    ax2.set_title('Box Plots dos Resíduos', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 2: Residuals Box Plots =====
+    ax2.set_title('Residuals Box Plots', fontsize=14, fontweight='bold')
     
     residuals_list = list(residuals_data.values())
     model_names = list(residuals_data.keys())
     
     box_plot = ax2.boxplot(residuals_list, labels=model_names, patch_artist=True)
     
-    # Colorir as caixas
+    # Color the boxes
     for patch, color in zip(box_plot['boxes'], colors):
         patch.set_facecolor(color)
         patch.set_alpha(0.7)
     
     ax2.axhline(y=0, color='red', linestyle='--', alpha=0.8, label='Zero')
-    ax2.set_ylabel('Resíduo', fontsize=12)
+    ax2.set_ylabel('Residual', fontsize=12)
     ax2.tick_params(axis='x', rotation=45)
     ax2.legend(fontsize=10)
     ax2.grid(True, alpha=0.3)
     
     # ===== SUBPLOT 3: Q-Q Plots =====
-    ax3.set_title('Q-Q Plots vs Distribuição Normal', fontsize=14, fontweight='bold')
+    ax3.set_title('Q-Q Plots vs Normal Distribution', fontsize=14, fontweight='bold')
     
     from scipy import stats
     
     for i, (model_name, residuals) in enumerate(residuals_data.items()):
-        # Calcular quantis teóricos e empíricos
+        # Calculate theoretical and empirical quantiles
         theoretical_quantiles = stats.norm.ppf(np.linspace(0.01, 0.99, len(residuals)))
         sample_quantiles = np.sort(residuals)
         
         ax3.scatter(theoretical_quantiles, sample_quantiles, alpha=0.6, 
                    color=colors[i], label=model_name, s=10)
     
-    # Linha de referência
+    # Reference line
     all_residuals = np.concatenate(list(residuals_data.values()))
     min_q, max_q = np.min(all_residuals), np.max(all_residuals)
     ax3.plot([min_q, max_q], [min_q, max_q], 'r-', linewidth=2, alpha=0.8, 
-             label='Distribuição Normal')
+             label='Normal Distribution')
     
-    ax3.set_xlabel('Quantis Teóricos (Normal)', fontsize=12)
-    ax3.set_ylabel('Quantis Empíricos', fontsize=12)
+    ax3.set_xlabel('Theoretical Quantiles (Normal)', fontsize=12)
+    ax3.set_ylabel('Empirical Quantiles', fontsize=12)
     ax3.legend(fontsize=10)
     ax3.grid(True, alpha=0.3)
     
-    # ===== SUBPLOT 4: Estatísticas dos Resíduos =====
-    ax4.set_title('Estatísticas dos Resíduos', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 4: Residuals Statistics =====
+    ax4.set_title('Residuals Statistics', fontsize=14, fontweight='bold')
     ax4.axis('off')
     
-    # Calcular estatísticas para cada modelo
-    stats_text = "ESTATÍSTICAS DOS RESÍDUOS:\n\n"
+    # Calculate statistics for each model
+    stats_text = "RESIDUALS STATISTICS:\n\n"
     
     for i, (model_name, residuals) in enumerate(residuals_data.items()):
         mean_res = np.mean(residuals)
@@ -405,36 +405,36 @@ def plot_residuals_comparison(results_dict, save_path=None,
         skew_res = stats.skew(residuals)
         kurt_res = stats.kurtosis(residuals)
         
-        # Teste de normalidade
+        # Normality test
         try:
             if len(residuals) <= 5000:
                 shapiro_stat, shapiro_p = stats.shapiro(residuals)
                 shapiro_text = f"Shapiro: {shapiro_stat:.4f} (p={shapiro_p:.4f})"
             else:
-                shapiro_text = "Shapiro: N/A (amostra grande)"
+                shapiro_text = "Shapiro: N/A (large sample)"
         except:
-            shapiro_text = "Shapiro: Erro no cálculo"
+            shapiro_text = "Shapiro: Calculation error"
         
-        # Análise qualitativa
+        # Qualitative analysis
         if abs(mean_res) < std_res * 0.1 and abs(skew_res) < 0.5 and abs(kurt_res) < 1:
-            quality = f"{get_status_emoji('good')} EXCELENTE"
+            quality = f"{get_status_emoji('good')} EXCELLENT"
             quality_color = get_status_emoji('excellent')
         elif abs(mean_res) < std_res * 0.2 and abs(skew_res) < 1 and abs(kurt_res) < 2:
-            quality = f"{get_status_emoji('warning')} BOM"
+            quality = f"{get_status_emoji('warning')} GOOD"
             quality_color = get_status_emoji('moderate')
         else:
-            quality = f"{get_status_emoji('bad')} PROBLEMÁTICO"
+            quality = f"{get_status_emoji('bad')} PROBLEMATIC"
             quality_color = get_status_emoji('poor')
         
         stats_text += f"{quality_color} {model_name}:\n"
-        stats_text += f"  Média: {mean_res:.6f}\n"
-        stats_text += f"  Desvio: {std_res:.6f}\n"
-        stats_text += f"  Assimetria: {skew_res:.4f}\n"
-        stats_text += f"  Curtose: {kurt_res:.4f}\n"
+        stats_text += f"  Mean: {mean_res:.6f}\n"
+        stats_text += f"  Std Dev: {std_res:.6f}\n"
+        stats_text += f"  Skewness: {skew_res:.4f}\n"
+        stats_text += f"  Kurtosis: {kurt_res:.4f}\n"
         stats_text += f"  {shapiro_text}\n"
-        stats_text += f"  Qualidade: {quality}\n\n"
+        stats_text += f"  Quality: {quality}\n\n"
     
-    # Ranking dos resíduos
+    # Residuals ranking
     residual_scores = []
     for model_name, residuals in residuals_data.items():
         score = 0
@@ -443,7 +443,7 @@ def plot_residuals_comparison(results_dict, save_path=None,
         skew_res = abs(stats.skew(residuals))
         kurt_res = abs(stats.kurtosis(residuals))
         
-        # Pontuação baseada na qualidade dos resíduos
+        # Score based on residuals quality
         if mean_res < std_res * 0.1: score += 3
         elif mean_res < std_res * 0.2: score += 2
         else: score += 1
@@ -458,7 +458,7 @@ def plot_residuals_comparison(results_dict, save_path=None,
     
     residual_scores.sort(key=lambda x: x[1], reverse=True)
     
-    stats_text += "RANKING (Qualidade dos Resíduos):\n"
+    stats_text += "RANKING (Residuals Quality):\n"
     for rank, (name, score) in enumerate(residual_scores, 1):
         medal = get_medal_emoji(rank)
         stats_text += f"{medal} {name} (Score: {score}/7)\n"
@@ -472,9 +472,9 @@ def plot_residuals_comparison(results_dict, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação de resíduos")
+        print_save_message(save_path, "Residuals comparison")
     
-    plt.close()  # Fechar figura para liberar memória
+    plt.close()  # Close figure to free memory
     
     return {
         'residuals_statistics': {name: {
@@ -488,16 +488,16 @@ def plot_residuals_comparison(results_dict, save_path=None,
 
 
 def plot_training_comparison(results_dict, save_path=None,
-                            title="Comparação do Histórico de Treinamento"):
+                            title="Training History Comparison"):
     """
-    Compara históricos de treinamento de múltiplos modelos
+    Compare training histories from multiple models
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
+        results_dict: Dictionary with model results
+        save_path: Path to save the plot
+        title: Plot title
     """
-    # Filtrar modelos que têm dados de treinamento
+    # Filter models that have training data
     training_data = {}
     for model_name, results in results_dict.items():
         if 'train_losses' in results and 'val_losses' in results:
@@ -505,18 +505,18 @@ def plot_training_comparison(results_dict, save_path=None,
     
     if not training_data:
         plt.figure(figsize=(10, 6))
-        plt.text(0.5, 0.5, 'Dados de treinamento não disponíveis', 
+        plt.text(0.5, 0.5, 'Training data not available', 
                 ha='center', va='center', fontsize=16,
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
-        plt.close()  # Fechar figura para liberar memória
+        plt.close()  # Close figure to free memory
         return
     
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
     
     colors, linestyles = get_colors_and_styles(len(training_data))
     
-    # ===== SUBPLOT 1: Loss de Treinamento =====
-    ax1.set_title('Loss de Treinamento', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 1: Training Loss =====
+    ax1.set_title('Training Loss', fontsize=14, fontweight='bold')
     
     for i, (model_name, results) in enumerate(training_data.items()):
         train_losses = results['train_losses']
@@ -524,14 +524,14 @@ def plot_training_comparison(results_dict, save_path=None,
         ax1.plot(epochs, train_losses, color=colors[i], linestyle=linestyles[i],
                 linewidth=2, label=model_name, alpha=0.8)
     
-    ax1.set_xlabel('Época', fontsize=12)
-    ax1.set_ylabel('Loss de Treinamento', fontsize=12)
+    ax1.set_xlabel('Epoch', fontsize=12)
+    ax1.set_ylabel('Training Loss', fontsize=12)
     ax1.legend(fontsize=10)
     ax1.grid(True, alpha=0.3)
-    ax1.set_yscale('log')  # Escala logarítmica para melhor visualização
+    ax1.set_yscale('log')  # Log scale for better visualization
     
-    # ===== SUBPLOT 2: Loss de Validação =====
-    ax2.set_title('Loss de Validação', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 2: Validation Loss =====
+    ax2.set_title('Validation Loss', fontsize=14, fontweight='bold')
     
     for i, (model_name, results) in enumerate(training_data.items()):
         val_losses = results['val_losses']
@@ -539,40 +539,40 @@ def plot_training_comparison(results_dict, save_path=None,
         ax2.plot(epochs, val_losses, color=colors[i], linestyle=linestyles[i],
                 linewidth=2, label=model_name, alpha=0.8)
     
-    ax2.set_xlabel('Época', fontsize=12)
-    ax2.set_ylabel('Loss de Validação', fontsize=12)
+    ax2.set_xlabel('Epoch', fontsize=12)
+    ax2.set_ylabel('Validation Loss', fontsize=12)
     ax2.legend(fontsize=10)
     ax2.grid(True, alpha=0.3)
     ax2.set_yscale('log')
     
-    # ===== SUBPLOT 3: Curvas de Aprendizado Combinadas =====
-    ax3.set_title('Curvas de Aprendizado (Train vs Val)', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 3: Combined Learning Curves =====
+    ax3.set_title('Learning Curves (Train vs Val)', fontsize=14, fontweight='bold')
     
     for i, (model_name, results) in enumerate(training_data.items()):
         train_losses = results['train_losses']
         val_losses = results['val_losses']
         epochs = range(1, len(train_losses) + 1)
         
-        # Treino (linha sólida)
+        # Training (solid line)
         ax3.plot(epochs, train_losses, color=colors[i], linestyle='-',
                 linewidth=2, label=f'{model_name} (Train)', alpha=0.8)
         
-        # Validação (linha tracejada)
+        # Validation (dashed line)
         ax3.plot(epochs, val_losses, color=colors[i], linestyle='--',
                 linewidth=2, label=f'{model_name} (Val)', alpha=0.8)
     
-    ax3.set_xlabel('Época', fontsize=12)
+    ax3.set_xlabel('Epoch', fontsize=12)
     ax3.set_ylabel('Loss', fontsize=12)
     ax3.legend(fontsize=9, ncol=2)
     ax3.grid(True, alpha=0.3)
     ax3.set_yscale('log')
     
-    # ===== SUBPLOT 4: Análise de Convergência =====
-    ax4.set_title('Análise de Convergência', fontsize=14, fontweight='bold')
+    # ===== SUBPLOT 4: Convergence Analysis =====
+    ax4.set_title('Convergence Analysis', fontsize=14, fontweight='bold')
     ax4.axis('off')
     
-    # Analisar convergência para cada modelo
-    convergence_text = "ANÁLISE DE CONVERGÊNCIA:\n\n"
+    # Analyze convergence for each model
+    convergence_text = "CONVERGENCE ANALYSIS:\n\n"
     
     convergence_scores = []
     
@@ -580,41 +580,41 @@ def plot_training_comparison(results_dict, save_path=None,
         train_losses = np.array(results['train_losses'])
         val_losses = np.array(results['val_losses'])
         
-        # Métricas de convergência
+        # Convergence metrics
         final_train_loss = train_losses[-1]
         final_val_loss = val_losses[-1]
         min_val_loss = np.min(val_losses)
         min_val_epoch = np.argmin(val_losses) + 1
         
-        # Verificar overfitting
+        # Check overfitting
         overfitting_gap = final_val_loss - final_train_loss
         overfitting_ratio = final_val_loss / final_train_loss if final_train_loss > 0 else np.inf
         
-        # Estabilidade (variação nos últimos 10% das épocas)
+        # Stability (variation in last 10% of epochs)
         last_10_percent = max(1, len(val_losses) // 10)
         val_stability = np.std(val_losses[-last_10_percent:])
         
-        # Velocidade de convergência (épocas para atingir 90% do melhor loss)
-        target_loss = min_val_loss * 1.1  # 110% do melhor loss
-        convergence_epoch = len(val_losses)  # Default: última época
+        # Convergence speed (epochs to reach 90% of best loss)
+        target_loss = min_val_loss * 1.1  # 110% of best loss
+        convergence_epoch = len(val_losses)  # Default: last epoch
         for i, loss in enumerate(val_losses):
             if loss <= target_loss:
                 convergence_epoch = i + 1
                 break
         
-        # Score de convergência
+        # Convergence score
         score = 0
         
-        # Melhor loss (peso 3)
+        # Best loss (weight 3)
         if min_val_loss < 0.01: score += 3
         elif min_val_loss < 0.1: score += 2
         else: score += 1
         
-        # Overfitting (peso 2)
+        # Overfitting (weight 2)
         if overfitting_ratio < 1.1: score += 2
         elif overfitting_ratio < 1.5: score += 1
         
-        # Velocidade (peso 1)
+        # Speed (weight 1)
         if convergence_epoch < len(val_losses) * 0.5: score += 1
         
         convergence_scores.append((model_name, score, {
@@ -627,29 +627,29 @@ def plot_training_comparison(results_dict, save_path=None,
             'total_epochs': len(val_losses)
         }))
         
-        # Status de overfitting
+        # Overfitting status
         if overfitting_ratio < 1.1:
-            overfitting_status = "✓ Sem overfitting"
+            overfitting_status = "✓ No overfitting"
             status_color = "🟢"
         elif overfitting_ratio < 1.5:
-            overfitting_status = "⚠ Overfitting leve"
+            overfitting_status = "⚠ Mild overfitting"
             status_color = "🟡"
         else:
-            overfitting_status = "✗ Overfitting severo"
+            overfitting_status = "✗ Severe overfitting"
             status_color = "🔴"
         
         convergence_text += f"{status_color} {model_name}:\n"
-        convergence_text += f"  Loss final (train): {final_train_loss:.6f}\n"
-        convergence_text += f"  Loss final (val): {final_val_loss:.6f}\n"
-        convergence_text += f"  Melhor val loss: {min_val_loss:.6f} (época {min_val_epoch})\n"
-        convergence_text += f"  Razão overfitting: {overfitting_ratio:.2f}\n"
-        convergence_text += f"  Convergência em: {convergence_epoch}/{len(val_losses)} épocas\n"
+        convergence_text += f"  Final loss (train): {final_train_loss:.6f}\n"
+        convergence_text += f"  Final loss (val): {final_val_loss:.6f}\n"
+        convergence_text += f"  Best val loss: {min_val_loss:.6f} (epoch {min_val_epoch})\n"
+        convergence_text += f"  Overfitting ratio: {overfitting_ratio:.2f}\n"
+        convergence_text += f"  Convergence at: {convergence_epoch}/{len(val_losses)} epochs\n"
         convergence_text += f"  Status: {overfitting_status}\n\n"
     
-    # Ranking de convergência
+    # Convergence ranking
     convergence_scores.sort(key=lambda x: x[1], reverse=True)
     
-    convergence_text += "RANKING (Qualidade de Convergência):\n"
+    convergence_text += "RANKING (Convergence Quality):\n"
     for rank, (name, score, _) in enumerate(convergence_scores, 1):
         medal = get_medal_emoji(rank)
         convergence_text += f"{medal} {name} (Score: {score}/6)\n"
@@ -663,9 +663,9 @@ def plot_training_comparison(results_dict, save_path=None,
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Comparação de treinamento")
+        print_save_message(save_path, "Training comparison")
     
-    plt.close()  # Fechar figura para liberar memória
+    plt.close()  # Close figure to free memory
     
     return {
         'convergence_analysis': {name: metrics for name, score, metrics in convergence_scores},

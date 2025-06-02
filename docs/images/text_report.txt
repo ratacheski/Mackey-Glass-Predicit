@@ -1,0 +1,308 @@
+================================================================================
+DETAILED REPORT OF MODEL ANALYSIS
+================================================================================
+Generated on: 02/06/2025 at 01:03:51
+Analysis type: Multiple models comparison
+Number of analyzed models: 7
+
+EXECUTIVE SUMMARY
+--------------------------------------------------
+
+🏆 GENERAL RANKING OF MODELS:
+
+🥇 lstm_bidirectional
+    Total Score: 5.5639
+    R²: 0.990789
+    RMSE: 0.036060
+    MAE: 0.026156
+    MAPE: 4.98%
+
+🥈 gru_bidirectional
+    Total Score: 5.0892
+    R²: 0.984880
+    RMSE: 0.046200
+    MAE: 0.035896
+    MAPE: 7.06%
+
+🥉 gru_large
+    Total Score: 5.0521
+    R²: 0.984210
+    RMSE: 0.047213
+    MAE: 0.036454
+    MAPE: 8.66%
+
+4º lstm_large
+    Total Score: 5.0431
+    R²: 0.983583
+    RMSE: 0.048141
+    MAE: 0.035985
+    MAPE: 6.56%
+
+5º gru_attention
+    Total Score: 4.9242
+    R²: 0.982544
+    RMSE: 0.049641
+    MAE: 0.039312
+    MAPE: 8.25%
+
+6º lstm_attention
+    Total Score: 4.8223
+    R²: 0.980030
+    RMSE: 0.053096
+    MAE: 0.040231
+    MAPE: 7.29%
+
+7º mlp_large
+    Total Score: 2.7983
+    R²: 0.932776
+    RMSE: 0.097416
+    MAE: 0.078291
+    MAPE: 26.59%
+
+🎯 BEST MODEL ANALYSIS (lstm_bidirectional):
+   ✅ EXCEPTIONAL PERFORMANCE (R² > 0.95)
+   ✅ Well-centered residuals (no bias)
+   ✅ Approximately symmetric residuals
+
+DETAILED ANALYSIS BY MODEL
+--------------------------------------------------
+
+📊 MODEL: mlp_large
+========================================
+Model: mlp_large
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.932776
+   RMSE (Root Mean Squared Error): 0.097416
+   MAE (Mean Absolute Error): 0.078291
+   MAPE (Mean Absolute Percentage Error): 26.59%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • High percentage error (≥ 20%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: 0.019991
+   Standard Deviation: 0.095343
+   Skewness: 0.3306
+   Kurtosis: -0.6659
+   Shapiro-Wilk Test: 0.9778 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ⚠️ Possible bias in residuals
+   ✅ Approximately symmetric distribution
+   ✅ Normal kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: lstm_large
+========================================
+Model: lstm_large
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.983583
+   RMSE (Root Mean Squared Error): 0.048141
+   MAE (Mean Absolute Error): 0.035985
+   MAPE (Mean Absolute Percentage Error): 6.56%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Low percentage error (< 10%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: -0.010529
+   Standard Deviation: 0.046976
+   Skewness: 0.8926
+   Kurtosis: 2.8434
+   Shapiro-Wilk Test: 0.9546 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ⚠️ Possible bias in residuals
+   ⚠️ Mild asymmetry
+   ❌ Excessively high kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: lstm_bidirectional
+========================================
+Model: lstm_bidirectional
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.990789
+   RMSE (Root Mean Squared Error): 0.036060
+   MAE (Mean Absolute Error): 0.026156
+   MAPE (Mean Absolute Percentage Error): 4.98%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Very low percentage error (< 5%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: -0.001468
+   Standard Deviation: 0.036030
+   Skewness: -0.3012
+   Kurtosis: 2.5610
+   Shapiro-Wilk Test: 0.9554 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ✅ No significant bias
+   ✅ Approximately symmetric distribution
+   ❌ Excessively high kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: lstm_attention
+========================================
+Model: lstm_attention
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.980030
+   RMSE (Root Mean Squared Error): 0.053096
+   MAE (Mean Absolute Error): 0.040231
+   MAPE (Mean Absolute Percentage Error): 7.29%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Low percentage error (< 10%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: 0.004483
+   Standard Deviation: 0.052906
+   Skewness: 0.2763
+   Kurtosis: 0.8941
+   Shapiro-Wilk Test: 0.9888 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ✅ No significant bias
+   ✅ Approximately symmetric distribution
+   ✅ Normal kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: gru_large
+========================================
+Model: gru_large
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.984210
+   RMSE (Root Mean Squared Error): 0.047213
+   MAE (Mean Absolute Error): 0.036454
+   MAPE (Mean Absolute Percentage Error): 8.66%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Low percentage error (< 10%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: -0.000899
+   Standard Deviation: 0.047204
+   Skewness: -0.2148
+   Kurtosis: 1.7711
+   Shapiro-Wilk Test: 0.9730 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ✅ No significant bias
+   ✅ Approximately symmetric distribution
+   ⚠️ Moderately high kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: gru_bidirectional
+========================================
+Model: gru_bidirectional
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.984880
+   RMSE (Root Mean Squared Error): 0.046200
+   MAE (Mean Absolute Error): 0.035896
+   MAPE (Mean Absolute Percentage Error): 7.06%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Low percentage error (< 10%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: 0.003865
+   Standard Deviation: 0.046038
+   Skewness: -0.2492
+   Kurtosis: 1.7491
+   Shapiro-Wilk Test: 0.9668 (p-value: 0.0000)
+   ⚠️ Residuals do not follow normal distribution (p ≤ 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ✅ No significant bias
+   ✅ Approximately symmetric distribution
+   ⚠️ Moderately high kurtosis
+
+────────────────────────────────────────
+
+📊 MODEL: gru_attention
+========================================
+Model: gru_attention
+Dataset Size: 998 samples
+Analysis Date: 2025-06-02 01:03:51
+
+🎯 PERFORMANCE METRICS:
+   R² (Coefficient of Determination): 0.982544
+   RMSE (Root Mean Squared Error): 0.049641
+   MAE (Mean Absolute Error): 0.039312
+   MAPE (Mean Absolute Percentage Error): 8.25%
+
+METRIC INTERPRETATION:
+==================================================
+   • Excellent predictive capability
+   • Low percentage error (< 10%)
+
+🔬 RESIDUAL ANALYSIS:
+   Mean: 0.002493
+   Standard Deviation: 0.049578
+   Skewness: -0.0889
+   Kurtosis: 0.1504
+   Shapiro-Wilk Test: 0.9976 (p-value: 0.1443)
+   ✅ Residuals follow normal distribution (p > 0.05)
+
+🩺 RESIDUAL DIAGNOSIS:
+   ✅ No significant bias
+   ✅ Approximately symmetric distribution
+   ✅ Normal kurtosis
+
+────────────────────────────────────────
+
+RECOMMENDATIONS
+==================================================
+🏆 RECOMMENDED MODEL: lstm_bidirectional
+💡 JUSTIFICATIONS:
+   • High R² (0.9908) indicates good predictive capability
+   • Lowest RMSE among all models
+   • Residuals well centered (no bias)
+
+🚀 NEXT STEPS:
+   • Verify model assumptions
+   • Consider non-parametric models
+
+================================================================================
+END OF REPORT
+================================================================================

@@ -1,10 +1,10 @@
 """
-Testes estatísticos: Kolmogorov-Smirnov e análise de autocorrelação
+Statistical tests: Kolmogorov-Smirnov and autocorrelation analysis
 """
 import matplotlib
-matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
+matplotlib.use('Agg')  # Non-interactive backend that only saves files
 import matplotlib.pyplot as plt
-plt.ioff()  # Desabilitar modo interativo
+plt.ioff()  # Disable interactive mode
 
 import numpy as np
 from scipy import stats
@@ -16,137 +16,137 @@ import os
 from .utils import ensure_output_dir, print_save_message, get_colors_and_styles
 
 
-def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Teste de Kolmogorov-Smirnov de Duas Amostras", alpha=0.05):
+def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Two-Sample Kolmogorov-Smirnov Test", alpha=0.05):
     """
-    Visualiza em detalhes o teste de Kolmogorov-Smirnov de duas amostras
+    Visualize in detail the two-sample Kolmogorov-Smirnov test
     
     Args:
-        actuals: Valores reais
-        predictions: Predições do modelo
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
-        alpha: Nível de significância (padrão: 0.05)
+        actuals: Actual values
+        predictions: Model predictions
+        save_path: Path to save the plot
+        title: Plot title
+        alpha: Significance level (default: 0.05)
     """
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
     
-    # Garantir que são arrays numpy
+    # Ensure they are numpy arrays
     actuals = np.array(actuals).flatten()
     predictions = np.array(predictions).flatten()
     
-    # Realizar teste KS de duas amostras
+    # Perform two-sample KS test
     ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
     
-    # Determinar resultado do teste
+    # Determine test result
     reject_h0 = ks_pvalue < alpha
-    test_conclusion = "REJEITAR H₀" if reject_h0 else "NÃO REJEITAR H₀"
+    test_conclusion = "REJECT H₀" if reject_h0 else "DO NOT REJECT H₀"
     conclusion_color = "red" if reject_h0 else "green"
     
-    # Range para CDFs
+    # Range for CDFs
     combined_data = np.concatenate([actuals, predictions])
     x_range = np.linspace(np.min(combined_data), np.max(combined_data), 1000)
     
-    # ===== SUBPLOT 1: CDFs e Diferença Máxima =====
-    ax1.set_title(f'{title}\nEstatística KS = {ks_statistic:.6f} | p-value = {ks_pvalue:.6f} | {test_conclusion}', 
+    # ===== SUBPLOT 1: CDFs and Maximum Difference =====
+    ax1.set_title(f'{title}\nKS Statistic = {ks_statistic:.6f} | p-value = {ks_pvalue:.6f} | {test_conclusion}', 
                  fontsize=14, fontweight='bold', color=conclusion_color)
     
-    # Calcular CDFs empíricas
+    # Calculate empirical CDFs
     cdf_actuals = np.array([np.mean(actuals <= x) for x in x_range])
     cdf_predictions = np.array([np.mean(predictions <= x) for x in x_range])
     
-    # Plotar CDFs
-    ax1.plot(x_range, cdf_actuals, 'b-', linewidth=3, label='CDF - Valores Reais', alpha=0.8)
-    ax1.plot(x_range, cdf_predictions, 'r-', linewidth=3, label='CDF - Predições', alpha=0.8)
+    # Plot CDFs
+    ax1.plot(x_range, cdf_actuals, 'b-', linewidth=3, label='CDF - Actual Values', alpha=0.8)
+    ax1.plot(x_range, cdf_predictions, 'r-', linewidth=3, label='CDF - Predictions', alpha=0.8)
     
-    # Encontrar ponto de diferença máxima
+    # Find maximum difference point
     diff = np.abs(cdf_actuals - cdf_predictions)
     max_diff_idx = np.argmax(diff)
     max_diff_x = x_range[max_diff_idx]
     max_diff_y1 = cdf_actuals[max_diff_idx]
     max_diff_y2 = cdf_predictions[max_diff_idx]
     
-    # Destacar diferença máxima
+    # Highlight maximum difference
     ax1.plot([max_diff_x, max_diff_x], [max_diff_y1, max_diff_y2], 
-             'k-', linewidth=4, alpha=0.8, label=f'Diferença Máxima = {ks_statistic:.6f}')
+             'k-', linewidth=4, alpha=0.8, label=f'Maximum Difference = {ks_statistic:.6f}')
     ax1.plot(max_diff_x, max_diff_y1, 'bo', markersize=10, markeredgecolor='black', markeredgewidth=2)
     ax1.plot(max_diff_x, max_diff_y2, 'ro', markersize=10, markeredgecolor='black', markeredgewidth=2)
     
-    # Área entre as curvas para visualizar diferenças
+    # Area between curves to visualize differences
     ax1.fill_between(x_range, cdf_actuals, cdf_predictions, alpha=0.2, color='gray', 
-                    label='Diferenças entre CDFs')
+                    label='Differences between CDFs')
     
-    # Linha vertical no ponto de diferença máxima
+    # Vertical line at maximum difference point
     ax1.axvline(x=max_diff_x, color='black', linestyle='--', alpha=0.6, 
                label=f'x = {max_diff_x:.4f}')
     
-    ax1.set_xlabel('Valor', fontsize=12)
-    ax1.set_ylabel('Probabilidade Acumulada', fontsize=12)
+    ax1.set_xlabel('Value', fontsize=12)
+    ax1.set_ylabel('Cumulative Probability', fontsize=12)
     ax1.legend(fontsize=10, loc='center right')
     ax1.grid(True, alpha=0.3)
     
-    # Adicionar caixa de informações do teste
+    # Add test information box
     info_text = (
-        f"Teste de Kolmogorov-Smirnov (duas amostras)\n"
-        f"H₀: Mesma distribuição de probabilidade\n"
-        f"H₁: Distribuições diferentes\n"
-        f"Nível de significância (α): {alpha}\n"
-        f"Estatística KS: {ks_statistic:.6f}\n"
+        f"Kolmogorov-Smirnov Test (two samples)\n"
+        f"H₀: Same probability distribution\n"
+        f"H₁: Different distributions\n"
+        f"Significance level (α): {alpha}\n"
+        f"KS Statistic: {ks_statistic:.6f}\n"
         f"p-value: {ks_pvalue:.6f}\n"
-        f"Diferença máxima em x = {max_diff_x:.4f}\n"
-        f"Tamanho amostra real: {len(actuals)}\n"
-        f"Tamanho amostra predição: {len(predictions)}"
+        f"Maximum difference at x = {max_diff_x:.4f}\n"
+        f"Actual sample size: {len(actuals)}\n"
+        f"Prediction sample size: {len(predictions)}"
     )
     
     ax1.text(0.02, 0.98, info_text, transform=ax1.transAxes, 
              bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9),
              verticalalignment='top', fontsize=9, fontfamily='monospace')
     
-    # ===== SUBPLOT 2: Histogramas Comparativos =====
-    ax2.set_title('Distribuições das Amostras (Histogramas Normalizados)', fontsize=12, fontweight='bold')
+    # ===== SUBPLOT 2: Comparative Histograms =====
+    ax2.set_title('Sample Distributions (Normalized Histograms)', fontsize=12, fontweight='bold')
     
-    # Calcular bins compartilhados
+    # Calculate shared bins
     bins = np.linspace(np.min(combined_data), np.max(combined_data), 50)
     
-    # Histogramas
+    # Histograms
     ax2.hist(actuals, bins=bins, density=True, alpha=0.6, color='blue', 
-            label=f'Valores Reais (n={len(actuals)})', edgecolor='darkblue')
+            label=f'Actual Values (n={len(actuals)})', edgecolor='darkblue')
     ax2.hist(predictions, bins=bins, density=True, alpha=0.6, color='red',
-            label=f'Predições (n={len(predictions)})', edgecolor='darkred')
+            label=f'Predictions (n={len(predictions)})', edgecolor='darkred')
     
-    # Adicionar KDE para suavização
+    # Add KDE for smoothing
     try:
         kde_actuals = gaussian_kde(actuals)
         kde_predictions = gaussian_kde(predictions)
         
         kde_x = np.linspace(np.min(combined_data), np.max(combined_data), 200)
-        ax2.plot(kde_x, kde_actuals(kde_x), 'b-', linewidth=2, alpha=0.8, label='KDE - Reais')
-        ax2.plot(kde_x, kde_predictions(kde_x), 'r-', linewidth=2, alpha=0.8, label='KDE - Predições')
+        ax2.plot(kde_x, kde_actuals(kde_x), 'b-', linewidth=2, alpha=0.8, label='KDE - Actual')
+        ax2.plot(kde_x, kde_predictions(kde_x), 'r-', linewidth=2, alpha=0.8, label='KDE - Predictions')
     except:
         pass
     
-    # Linha vertical no ponto de diferença máxima
+    # Vertical line at maximum difference point
     ax2.axvline(x=max_diff_x, color='black', linestyle='--', alpha=0.8, linewidth=2,
-               label=f'Diferença máxima (x = {max_diff_x:.4f})')
+               label=f'Maximum difference (x = {max_diff_x:.4f})')
     
-    ax2.set_xlabel('Valor', fontsize=12)
-    ax2.set_ylabel('Densidade', fontsize=12)
+    ax2.set_xlabel('Value', fontsize=12)
+    ax2.set_ylabel('Density', fontsize=12)
     ax2.legend(fontsize=10)
     ax2.grid(True, alpha=0.3)
     
-    # Interpretação do resultado
+    # Result interpretation
     if reject_h0:
         interpretation = (
-            f"CONCLUSÃO: Rejeitamos H₀ (p = {ks_pvalue:.6f} < α = {alpha})\n"
-            f"Há evidência estatística SUFICIENTE de que as distribuições\n"
-            f"das predições e valores reais são DIFERENTES.\n"
-            f"O modelo NÃO reproduz adequadamente a distribuição dos dados."
+            f"CONCLUSION: We reject H₀ (p = {ks_pvalue:.6f} < α = {alpha})\n"
+            f"There is SUFFICIENT statistical evidence that the distributions\n"
+            f"of predictions and actual values are DIFFERENT.\n"
+            f"The model does NOT adequately reproduce the data distribution."
         )
         interp_color = 'lightcoral'
     else:
         interpretation = (
-            f"CONCLUSÃO: Não rejeitamos H₀ (p = {ks_pvalue:.6f} ≥ α = {alpha})\n"
-            f"NÃO há evidência estatística suficiente de que as distribuições\n"
-            f"das predições e valores reais sejam diferentes.\n"
-            f"O modelo reproduz adequadamente a distribuição dos dados."
+            f"CONCLUSION: We do not reject H₀ (p = {ks_pvalue:.6f} ≥ α = {alpha})\n"
+            f"There is NOT sufficient statistical evidence that the distributions\n"
+            f"of predictions and actual values are different.\n"
+            f"The model adequately reproduces the data distribution."
         )
         interp_color = 'lightgreen'
     
@@ -159,11 +159,11 @@ def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Teste de 
     if save_path:
         ensure_output_dir(save_path)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print_save_message(save_path, "Teste Kolmogorov-Smirnov")
+        print_save_message(save_path, "Kolmogorov-Smirnov Test")
     
-    plt.close()  # Fechar figura para liberar memória
+    plt.close()  # Close figure to free memory
     
-    # Retornar resultados do teste
+    # Return test results
     return {
         'ks_statistic': ks_statistic,
         'p_value': ks_pvalue,
@@ -175,146 +175,146 @@ def plot_ks_test_analysis(actuals, predictions, save_path=None, title="Teste de 
 
 
 def plot_autocorrelation_analysis(actuals, predictions, save_path=None, 
-                                  title="Comparação de Autocorrelação", 
+                                  title="Autocorrelation Comparison", 
                                   max_lags=40, alpha=0.05):
     """
-    Compara a função de autocorrelação entre valores reais e predições
+    Compare autocorrelation function between actual values and predictions
     
     Args:
-        actuals: Valores reais (série temporal)
-        predictions: Predições do modelo (série temporal)
-        save_path: Caminho para salvar o gráfico
-        title: Título do gráfico
-        max_lags: Número máximo de lags para calcular a autocorrelação
-        alpha: Nível de significância para intervalos de confiança
+        actuals: Actual values (time series)
+        predictions: Model predictions (time series)
+        save_path: Path to save the plot
+        title: Plot title
+        max_lags: Maximum number of lags to calculate autocorrelation
+        alpha: Significance level for confidence intervals
     """
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(15, 12))
     
-    # Garantir que são arrays numpy
+    # Ensure they are numpy arrays
     actuals = np.array(actuals).flatten()
     predictions = np.array(predictions).flatten()
     
-    # Verificar se as séries têm tamanho suficiente
+    # Check if series have sufficient size
     min_length = min(len(actuals), len(predictions))
-    max_lags = min(max_lags, min_length // 4)  # Regra conservadora para lags
+    max_lags = min(max_lags, min_length // 4)  # Conservative rule for lags
     
     try:
-        # ===== SUBPLOT 1: Autocorrelação dos Valores Reais =====
-        ax1.set_title(f'Autocorrelação - Valores Reais (n={len(actuals)})', 
+        # ===== SUBPLOT 1: Autocorrelation of Actual Values =====
+        ax1.set_title(f'Autocorrelation - Actual Values (n={len(actuals)})', 
                      fontsize=12, fontweight='bold')
         
-        # Calcular autocorrelação dos valores reais
+        # Calculate autocorrelation of actual values
         acf_actuals = acf(actuals, nlags=max_lags, alpha=alpha, fft=True)
         lags = np.arange(len(acf_actuals[0]))
         
-        # Plotar autocorrelação
-        ax1.plot(lags, acf_actuals[0], 'b-', linewidth=2, label='ACF - Valores Reais', 
+        # Plot autocorrelation
+        ax1.plot(lags, acf_actuals[0], 'b-', linewidth=2, label='ACF - Actual Values', 
                 marker='o', markersize=4, alpha=0.8)
         
-        # Adicionar intervalos de confiança
-        if len(acf_actuals) > 1:  # Se intervalos de confiança foram calculados
+        # Add confidence intervals
+        if len(acf_actuals) > 1:  # If confidence intervals were calculated
             lower_conf = acf_actuals[1][:, 0] - acf_actuals[0]
             upper_conf = acf_actuals[1][:, 1] - acf_actuals[0]
             ax1.fill_between(lags, lower_conf, upper_conf, alpha=0.2, color='blue', 
-                           label=f'IC {(1-alpha)*100:.0f}%')
+                           label=f'CI {(1-alpha)*100:.0f}%')
         
-        # Linha de referência em zero
+        # Reference line at zero
         ax1.axhline(y=0, color='black', linestyle='-', alpha=0.3)
         
-        # Linhas de significância estatística (aproximada)
+        # Statistical significance lines (approximate)
         significance_line = 1.96 / np.sqrt(len(actuals))
         ax1.axhline(y=significance_line, color='red', linestyle='--', alpha=0.6, 
-                   label=f'Limite ±{significance_line:.3f}')
+                   label=f'Limit ±{significance_line:.3f}')
         ax1.axhline(y=-significance_line, color='red', linestyle='--', alpha=0.6)
         
         ax1.set_xlabel('Lag', fontsize=10)
-        ax1.set_ylabel('Autocorrelação', fontsize=10)
+        ax1.set_ylabel('Autocorrelation', fontsize=10)
         ax1.legend(fontsize=9)
         ax1.grid(True, alpha=0.3)
         ax1.set_ylim(-1, 1)
         
-        # ===== SUBPLOT 2: Autocorrelação das Predições =====
-        ax2.set_title(f'Autocorrelação - Predições (n={len(predictions)})', 
+        # ===== SUBPLOT 2: Autocorrelation of Predictions =====
+        ax2.set_title(f'Autocorrelation - Predictions (n={len(predictions)})', 
                      fontsize=12, fontweight='bold')
         
-        # Calcular autocorrelação das predições
+        # Calculate autocorrelation of predictions
         acf_predictions = acf(predictions, nlags=max_lags, alpha=alpha, fft=True)
         
-        # Plotar autocorrelação
-        ax2.plot(lags, acf_predictions[0], 'r-', linewidth=2, label='ACF - Predições', 
+        # Plot autocorrelation
+        ax2.plot(lags, acf_predictions[0], 'r-', linewidth=2, label='ACF - Predictions', 
                 marker='s', markersize=4, alpha=0.8)
         
-        # Adicionar intervalos de confiança
+        # Add confidence intervals
         if len(acf_predictions) > 1:
             lower_conf = acf_predictions[1][:, 0] - acf_predictions[0]
             upper_conf = acf_predictions[1][:, 1] - acf_predictions[0]
             ax2.fill_between(lags, lower_conf, upper_conf, alpha=0.2, color='red', 
-                           label=f'IC {(1-alpha)*100:.0f}%')
+                           label=f'CI {(1-alpha)*100:.0f}%')
         
-        # Linha de referência e significância
+        # Reference and significance lines
         ax2.axhline(y=0, color='black', linestyle='-', alpha=0.3)
         significance_line_pred = 1.96 / np.sqrt(len(predictions))
         ax2.axhline(y=significance_line_pred, color='red', linestyle='--', alpha=0.6, 
-                   label=f'Limite ±{significance_line_pred:.3f}')
+                   label=f'Limit ±{significance_line_pred:.3f}')
         ax2.axhline(y=-significance_line_pred, color='red', linestyle='--', alpha=0.6)
         
         ax2.set_xlabel('Lag', fontsize=10)
-        ax2.set_ylabel('Autocorrelação', fontsize=10)
+        ax2.set_ylabel('Autocorrelation', fontsize=10)
         ax2.legend(fontsize=9)
         ax2.grid(True, alpha=0.3)
         ax2.set_ylim(-1, 1)
         
-        # ===== SUBPLOT 3: Comparação Direta =====
-        ax3.set_title('Comparação Direta das Autocorrelações', fontsize=12, fontweight='bold')
+        # ===== SUBPLOT 3: Direct Comparison =====
+        ax3.set_title('Direct Comparison of Autocorrelations', fontsize=12, fontweight='bold')
         
-        # Plotar ambas as autocorrelações juntas
-        ax3.plot(lags, acf_actuals[0], 'b-', linewidth=2.5, label='ACF - Valores Reais', 
+        # Plot both autocorrelations together
+        ax3.plot(lags, acf_actuals[0], 'b-', linewidth=2.5, label='ACF - Actual Values', 
                 marker='o', markersize=5, alpha=0.8)
-        ax3.plot(lags, acf_predictions[0], 'r--', linewidth=2.5, label='ACF - Predições', 
+        ax3.plot(lags, acf_predictions[0], 'r--', linewidth=2.5, label='ACF - Predictions', 
                 marker='s', markersize=5, alpha=0.8)
         
-        # Área entre as curvas para mostrar diferenças
+        # Area between curves to show differences
         ax3.fill_between(lags, acf_actuals[0], acf_predictions[0], alpha=0.2, color='gray', 
-                        label='Diferença entre ACFs')
+                        label='Difference between ACFs')
         
-        # Linhas de referência
+        # Reference lines
         ax3.axhline(y=0, color='black', linestyle='-', alpha=0.3)
         ax3.axhline(y=significance_line, color='gray', linestyle=':', alpha=0.6, 
-                   label=f'Limite significância ±{significance_line:.3f}')
+                   label=f'Significance limit ±{significance_line:.3f}')
         ax3.axhline(y=-significance_line, color='gray', linestyle=':', alpha=0.6)
         
         ax3.set_xlabel('Lag', fontsize=10)
-        ax3.set_ylabel('Autocorrelação', fontsize=10)
+        ax3.set_ylabel('Autocorrelation', fontsize=10)
         ax3.legend(fontsize=9)
         ax3.grid(True, alpha=0.3)
         ax3.set_ylim(-1, 1)
         
-        # ===== CÁLCULO DE MÉTRICAS COMPARATIVAS =====
-        # Diferença quadrática média entre autocorrelações
+        # ===== COMPARATIVE METRICS CALCULATION =====
+        # Mean squared difference between autocorrelations
         mse_acf = np.mean((acf_actuals[0] - acf_predictions[0])**2)
         
-        # Correlação entre as duas funções de autocorrelação
+        # Correlation between the two autocorrelation functions
         corr_acf = np.corrcoef(acf_actuals[0], acf_predictions[0])[0, 1]
         
-        # Diferença máxima absoluta
+        # Maximum absolute difference
         max_diff_acf = np.max(np.abs(acf_actuals[0] - acf_predictions[0]))
         max_diff_lag = lags[np.argmax(np.abs(acf_actuals[0] - acf_predictions[0]))]
         
-        # Teste de Ljung-Box para autocorrelação dos resíduos
+        # Ljung-Box test for residual autocorrelation
         residuals = predictions - actuals[:len(predictions)] if len(predictions) <= len(actuals) else predictions[:len(actuals)] - actuals
         try:
             ljung_box = acorr_ljungbox(residuals, lags=min(10, len(residuals)//5), return_df=True)
-            ljung_box_pvalue = ljung_box['lb_pvalue'].iloc[-1]  # Último p-value
+            ljung_box_pvalue = ljung_box['lb_pvalue'].iloc[-1]  # Last p-value
         except:
             ljung_box_pvalue = np.nan
         
-        # Caixa de métricas no subplot 3
+        # Metrics box in subplot 3
         metrics_text = (
-            f"MÉTRICAS COMPARATIVAS:\n"
-            f"MSE das ACFs: {mse_acf:.6f}\n"
-            f"Correlação ACFs: {corr_acf:.4f}\n"
-            f"Diferença máxima: {max_diff_acf:.4f}\n"
-            f"Lag da dif. máxima: {max_diff_lag}\n"
+            f"COMPARATIVE METRICS:\n"
+            f"ACF MSE: {mse_acf:.6f}\n"
+            f"ACF Correlation: {corr_acf:.4f}\n"
+            f"Maximum difference: {max_diff_acf:.4f}\n"
+            f"Max diff lag: {max_diff_lag}\n"
             f"Ljung-Box p-value: {ljung_box_pvalue:.4f}" if not np.isnan(ljung_box_pvalue) else "Ljung-Box: N/A"
         )
         
@@ -322,22 +322,22 @@ def plot_autocorrelation_analysis(actuals, predictions, save_path=None,
                 bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9),
                 verticalalignment='top', fontsize=9, fontfamily='monospace')
         
-        # ===== INTERPRETAÇÃO =====
-        # Classificar a qualidade da reprodução da estrutura temporal
+        # ===== INTERPRETATION =====
+        # Classify the quality of temporal structure reproduction
         if corr_acf > 0.9 and mse_acf < 0.1:
-            interpretation = "EXCELENTE: Estrutura temporal muito bem reproduzida"
+            interpretation = "EXCELLENT: Temporal structure very well reproduced"
             interp_color = 'lightgreen'
         elif corr_acf > 0.7 and mse_acf < 0.2:
-            interpretation = "BOM: Estrutura temporal bem reproduzida"
+            interpretation = "GOOD: Temporal structure well reproduced"
             interp_color = 'lightblue'
         elif corr_acf > 0.5 and mse_acf < 0.4:
-            interpretation = "MODERADO: Estrutura temporal parcialmente reproduzida"
+            interpretation = "MODERATE: Temporal structure partially reproduced"
             interp_color = 'lightyellow'
         else:
-            interpretation = "RUIM: Estrutura temporal mal reproduzida"
+            interpretation = "POOR: Temporal structure poorly reproduced"
             interp_color = 'lightcoral'
         
-        ax3.text(0.02, 0.02, f"AVALIAÇÃO: {interpretation}", transform=ax3.transAxes, 
+        ax3.text(0.02, 0.02, f"ASSESSMENT: {interpretation}", transform=ax3.transAxes, 
                 bbox=dict(boxstyle='round', facecolor=interp_color, alpha=0.9),
                 verticalalignment='bottom', fontsize=10, fontweight='bold')
         
@@ -347,11 +347,11 @@ def plot_autocorrelation_analysis(actuals, predictions, save_path=None,
         if save_path:
             ensure_output_dir(save_path)
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print_save_message(save_path, "Análise de autocorrelação")
+            print_save_message(save_path, "Autocorrelation analysis")
         
-        plt.close()  # Fechar figura para liberar memória
+        plt.close()  # Close figure to free memory
         
-        # Retornar métricas
+        # Return metrics
         return {
             'acf_reals': acf_actuals[0],
             'acf_predictions': acf_predictions[0],
@@ -365,16 +365,16 @@ def plot_autocorrelation_analysis(actuals, predictions, save_path=None,
         
     except Exception as e:
         plt.figure(figsize=(10, 6))
-        plt.text(0.5, 0.5, f'Erro ao calcular autocorrelação:\n{str(e)}', 
+        plt.text(0.5, 0.5, f'Error calculating autocorrelation:\n{str(e)}', 
                 ha='center', va='center', transform=plt.gca().transAxes,
                 bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.8),
                 fontsize=12)
-        plt.title(f"Erro na Análise de Autocorrelação - {title}")
+        plt.title(f"Error in Autocorrelation Analysis - {title}")
         plt.axis('off')
         
         if save_path:
             ensure_output_dir(save_path)
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.close()  # Fechar figura para liberar memória
+        plt.close()  # Close figure to free memory
         return None 

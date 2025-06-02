@@ -1,24 +1,24 @@
 """
-Pacote de visualização modular para análise de modelos de machine learning
+Modular visualization package for machine learning model analysis
 
-Este pacote contém módulos especializados para diferentes tipos de visualizações:
-- utils: Funções utilitárias e formatação
-- basic_plots: Gráficos básicos (treinamento, predições)
-- distribution_analysis: Análises de distribuição (QQ-plot, FDA, FDP)
-- statistical_tests: Testes estatísticos (KS, autocorrelação)
-- comparison_plots: Comparações entre modelos
-- reports: Geração de relatórios abrangentes
+This package contains specialized modules for different types of visualizations:
+- utils: Utility functions and formatting
+- basic_plots: Basic plots (training, predictions)
+- distribution_analysis: Distribution analysis (QQ-plot, CDF, PDF)
+- statistical_tests: Statistical tests (KS, autocorrelation)
+- comparison_plots: Model comparisons
+- reports: Comprehensive report generation
 """
 
-# Configurar matplotlib para não exibir gráficos na tela
+# Configure matplotlib to not display plots on screen
 import matplotlib
-matplotlib.use('Agg')  # Backend não-interativo que apenas salva arquivos
+matplotlib.use('Agg')  # Non-interactive backend that only saves files
 import matplotlib.pyplot as plt
 
-# Configurações adicionais para melhor qualidade e desempenho
-plt.ioff()  # Desabilitar modo interativo
+# Additional configurations for better quality and performance
+plt.ioff()  # Disable interactive mode
 
-# Imports principais de cada módulo
+# Main imports from each module
 from .utils import (
     format_metric_value,
     validate_and_clean_metrics,
@@ -62,10 +62,10 @@ from .reports import (
     generate_quick_summary
 )
 
-# Versão do pacote
+# Package version
 __version__ = "1.0.0"
 
-# Lista de todas as funções disponíveis
+# List of all available functions
 __all__ = [
     # Utils
     'format_metric_value',
@@ -108,151 +108,151 @@ __all__ = [
 
 def show_available_functions():
     """
-    Mostra todas as funções disponíveis no pacote de visualização
+    Show all available functions in the visualization package
     """
-    print("📊 PACOTE DE VISUALIZAÇÃO - FUNÇÕES DISPONÍVEIS")
+    print("📊 VISUALIZATION PACKAGE - AVAILABLE FUNCTIONS")
     print("=" * 60)
     
-    print("\n🛠️  UTILITÁRIOS:")
-    print("   • format_metric_value() - Formatar valores de métricas")
-    print("   • validate_and_clean_metrics() - Validar dados de entrada")
-    print("   • ensure_output_dir() - Garantir diretório de saída")
-    print("   • get_colors_and_styles() - Obter cores e estilos")
-    print("   • add_metrics_text_box() - Adicionar caixa de métricas")
-    print("   • print_save_message() - Mensagem de confirmação")
+    print("\n🛠️  UTILITIES:")
+    print("   • format_metric_value() - Format metric values")
+    print("   • validate_and_clean_metrics() - Validate input data")
+    print("   • ensure_output_dir() - Ensure output directory")
+    print("   • get_colors_and_styles() - Get colors and styles")
+    print("   • add_metrics_text_box() - Add metrics text box")
+    print("   • print_save_message() - Confirmation message")
     
-    print("\n📈 GRÁFICOS BÁSICOS:")
-    print("   • plot_training_history() - Histórico de treinamento")
-    print("   • plot_predictions() - Predições vs valores reais")
-    print("   • plot_metrics_comparison() - Comparação de métricas")
-    print("   • save_metrics_table() - Salvar tabela de métricas")
+    print("\n📈 BASIC PLOTS:")
+    print("   • plot_training_history() - Training history")
+    print("   • plot_predictions() - Predictions vs actual values")
+    print("   • plot_metrics_comparison() - Metrics comparison")
+    print("   • save_metrics_table() - Save metrics table")
     
-    print("\n📊 ANÁLISE DE DISTRIBUIÇÕES:")
+    print("\n📊 DISTRIBUTION ANALYSIS:")
     print("   • plot_qq_analysis() - Q-Q Plot")
-    print("   • plot_cdf_comparison() - Comparação FDA")
-    print("   • plot_pdf_comparison() - Comparação FDP")
-    print("   • plot_distribution_analysis() - Análise completa")
-    print("   • plot_multi_model_cdf_comparison() - FDA múltiplos modelos")
-    print("   • plot_multi_model_pdf_comparison() - FDP múltiplos modelos")
+    print("   • plot_cdf_comparison() - CDF comparison")
+    print("   • plot_pdf_comparison() - PDF comparison")
+    print("   • plot_distribution_analysis() - Complete analysis")
+    print("   • plot_multi_model_cdf_comparison() - Multi-model CDF")
+    print("   • plot_multi_model_pdf_comparison() - Multi-model PDF")
     
-    print("\n🔬 TESTES ESTATÍSTICOS:")
-    print("   • plot_ks_test_analysis() - Teste Kolmogorov-Smirnov")
-    print("   • plot_autocorrelation_analysis() - Análise autocorrelação")
+    print("\n🔬 STATISTICAL TESTS:")
+    print("   • plot_ks_test_analysis() - Kolmogorov-Smirnov test")
+    print("   • plot_autocorrelation_analysis() - Autocorrelation analysis")
     
-    print("\n🆚 COMPARAÇÃO DE MODELOS:")
-    print("   • plot_models_comparison_overview() - Visão geral comparativa")
-    print("   • plot_predictions_comparison() - Comparar predições")
-    print("   • plot_residuals_comparison() - Comparar resíduos")
-    print("   • plot_training_comparison() - Comparar treinamento")
+    print("\n🆚 MODEL COMPARISON:")
+    print("   • plot_models_comparison_overview() - Comparative overview")
+    print("   • plot_predictions_comparison() - Compare predictions")
+    print("   • plot_residuals_comparison() - Compare residuals")
+    print("   • plot_training_comparison() - Compare training")
     
-    print("\n📄 RELATÓRIOS:")
-    print("   • generate_comprehensive_report() - Relatório completo")
-    print("   • generate_text_report() - Relatório textual")
-    print("   • generate_quick_summary() - Resumo rápido")
+    print("\n📄 REPORTS:")
+    print("   • generate_comprehensive_report() - Complete report")
+    print("   • generate_text_report() - Text report")
+    print("   • generate_quick_summary() - Quick summary")
     
     print("\n" + "=" * 60)
-    print("🚀 Para mais informações, use help(função)")
+    print("🚀 For more information, use help(function)")
 
 
 def quick_start_guide():
     """
-    Guia rápido de uso do pacote
+    Quick start guide for the package
     """
     guide = """
-    🚀 GUIA RÁPIDO - PACOTE DE VISUALIZAÇÃO
-    ======================================
+    🚀 QUICK START GUIDE - VISUALIZATION PACKAGE
+    ===========================================
     
-    📋 PREPARAÇÃO DOS DADOS:
-    -----------------------
-    Os dados devem estar no formato de dicionário:
+    📋 DATA PREPARATION:
+    -------------------
+    Data should be in dictionary format:
     
-    # Para um único modelo:
+    # For a single model:
     results = {
-        'actuals': [valores_reais],
-        'predictions': [predições],
-        'train_losses': [losses_treino],  # opcional
-        'val_losses': [losses_validação]  # opcional
+        'actuals': [actual_values],
+        'predictions': [predictions],
+        'train_losses': [training_losses],  # optional
+        'val_losses': [validation_losses]  # optional
     }
     
-    # Para múltiplos modelos:
+    # For multiple models:
     results_dict = {
-        'Modelo_1': {
+        'Model_1': {
             'actuals': [...],
             'predictions': [...],
             ...
         },
-        'Modelo_2': {
+        'Model_2': {
             'actuals': [...],
             'predictions': [...],
             ...
         }
     }
     
-    ⚡ USO RÁPIDO:
-    -------------
+    ⚡ QUICK USAGE:
+    --------------
     
-    # 1. Importar o pacote
+    # 1. Import the package
     from mackey_glass_prediction.utils import visualization as viz
     
-    # 2. Gráfico básico de predições
-    viz.plot_predictions(actuals, predictions, save_path="predicoes.png")
+    # 2. Basic prediction plot
+    viz.plot_predictions(actuals, predictions, save_path="predictions.png")
     
-    # 3. Análise Q-Q
+    # 3. Q-Q analysis
     viz.plot_qq_analysis(actuals, predictions, save_path="qq_plot.png")
     
-    # 4. Comparação de modelos
-    viz.plot_models_comparison_overview(results_dict, save_path="comparacao.png")
+    # 4. Model comparison
+    viz.plot_models_comparison_overview(results_dict, save_path="comparison.png")
     
-    # 5. Relatório completo
+    # 5. Complete report
     generated_files = viz.generate_comprehensive_report(
         results_dict, 
-        output_dir="relatorio/"
+        output_dir="report/"
     )
     
-    # 6. Resumo rápido no console
+    # 6. Quick summary in console
     print(viz.generate_quick_summary(results_dict))
     
-    🎯 DICAS:
-    ---------
-    • Use save_path=None para mostrar gráficos sem salvar
-    • Todos os gráficos têm títulos e parâmetros customizáveis
-    • O relatório abrangente gera todos os tipos de análise
-    • Use show_available_functions() para ver todas as opções
+    🎯 TIPS:
+    --------
+    • Use save_path=None to show plots without saving
+    • All plots have customizable titles and parameters
+    • Comprehensive report generates all types of analysis
+    • Use show_available_functions() to see all options
     
-    📚 DOCUMENTAÇÃO:
-    ----------------
-    • Cada função tem docstring detalhada
-    • Use help(viz.função) para mais informações
-    • Exemplos disponíveis nos docstrings
+    📚 DOCUMENTATION:
+    -----------------
+    • Each function has detailed docstring
+    • Use help(viz.function) for more information
+    • Examples available in docstrings
     """
     
     print(guide)
 
 
-# Função de conveniência para análise rápida
+# Convenience function for quick analysis
 def quick_analysis(results_dict, output_dir="analysis_output", model_name=None):
     """
-    Análise rápida com os gráficos mais importantes
+    Quick analysis with the most important plots
     
     Args:
-        results_dict: Dados dos modelos
-        output_dir: Diretório de saída
-        model_name: Nome do modelo (para análise única)
+        results_dict: Model data
+        output_dir: Output directory
+        model_name: Model name (for single analysis)
     
     Returns:
-        dict: Arquivos gerados
+        dict: Generated files
     """
     ensure_output_dir(output_dir)
     
-    print("🚀 Iniciando análise rápida...")
+    print("🚀 Starting quick analysis...")
     
-    # Se for um único modelo
+    # If it's a single model
     if model_name and isinstance(results_dict, dict) and 'actuals' in results_dict:
         single_model = {model_name: results_dict}
         
         generated = {}
         
-        # Gráficos básicos
+        # Basic plots
         if 'actuals' in results_dict and 'predictions' in results_dict:
             pred_path = f"{output_dir}/predictions_{model_name}.png"
             plot_predictions(results_dict['actuals'], results_dict['predictions'], 
@@ -270,22 +270,22 @@ def quick_analysis(results_dict, output_dir="analysis_output", model_name=None):
                                 save_path=train_path)
             generated['training'] = train_path
         
-        print(f"✅ Análise rápida concluída! {len(generated)} arquivos gerados.")
+        print(f"✅ Quick analysis completed! {len(generated)} files generated.")
         return generated
     
     else:
-        # Múltiplos modelos
+        # Multiple models
         generated = {}
         
-        # Visão geral comparativa
+        # Comparative overview
         overview_path = f"{output_dir}/models_overview.png"
         plot_models_comparison_overview(results_dict, save_path=overview_path)
         generated['overview'] = overview_path
         
-        # Comparação de predições
+        # Predictions comparison
         pred_comp_path = f"{output_dir}/predictions_comparison.png"
         plot_predictions_comparison(results_dict, save_path=pred_comp_path)
         generated['predictions_comparison'] = pred_comp_path
         
-        print(f"✅ Análise rápida concluída! {len(generated)} arquivos gerados.")
+        print(f"✅ Quick analysis completed! {len(generated)} files generated.")
         return generated 

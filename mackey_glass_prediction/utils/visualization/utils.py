@@ -1,11 +1,11 @@
 """
-Utilitários para visualização
+Visualization utilities
 """
-# Configurar matplotlib ANTES de qualquer outro import
+# Configure matplotlib BEFORE any other import
 import matplotlib
-matplotlib.use('Agg')  # Backend não-interativo
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
-plt.ioff()  # Desabilitar modo interativo
+plt.ioff()  # Disable interactive mode
 
 import numpy as np
 import pandas as pd
@@ -14,35 +14,41 @@ import os
 import platform
 import matplotlib.font_manager as fm
 
-# Configurar estilo dos gráficos
+# Configure plot style
 matplotlib.style.use('ggplot')
 sns.set_palette("husl")
+
+# Configure plot style
+plt.style.use('default')
 
 
 def format_metric_value(value, metric_name, context='table'):
     """
-    Função utilitária para formatação consistente de valores de métricas
+    Utility function for consistent formatting of metric values
     
     Args:
-        value: Valor numérico a ser formatado
-        metric_name: Nome da métrica (MSE, EQMN1, EQMN2, RMSE, MAE, MAPE, R², FDA_*, FDP_*, D2_PINBALL_SCORE, MEAN_PINBALL_LOSS)
-        context: Contexto da formatação ('table' ou 'display')
+        value: Numeric value to be formatted
+        metric_name: Metric name (MSE, EQMN1, EQMN2, RMSE, MAE, MAPE, R², FDA_*, FDP_*, D2_PINBALL_SCORE, MEAN_PINBALL_LOSS)
+        context: Formatting context ('table' or 'display')
     """
     if pd.isna(value) or value is None:
         return 'N/A'
     
-    # Verificar valores extremos
+    # Check extreme values
     if np.isinf(value):
         return '∞' if value > 0 else '-∞'
     
-    # Tratamento especial para diferentes métricas
+    # Special treatment for different metrics
     if metric_name == 'R²':
         return f'{value:.4f}'
     elif metric_name == 'D2_PINBALL_SCORE':
-        # d2 pinball loss é similar ao R² (pode ser negativo, varia tipicamente entre -∞ e 1)
-        return f'{value:.4f}'
+        # d2 pinball loss is similar to R² (can be negative, typically varies between -∞ and 1)
+        if value < 0:
+            return f'{value:.4f}'
+        else:
+            return f'{value:.4f}'
     elif metric_name == 'MEAN_PINBALL_LOSS':
-        # mean pinball loss é uma métrica de erro (valores menores são melhores)
+        # mean pinball loss is an error metric (lower values are better)
         if abs(value) < 1e-4:
             return f'{value:.2e}'
         elif abs(value) < 0.01:
@@ -59,10 +65,9 @@ def format_metric_value(value, metric_name, context='table'):
         else:
             return f'{value:.1f}%'
     elif metric_name in ['MSE', 'RMSE', 'MAE', 'EQMN1', 'EQMN2']:
-        # Para valores muito pequenos, usar notação científica
+        # For very small values, use scientific notation
         if abs(value) < 1e-4:
             return f'{value:.2e}'
-        # Para valores pequenos, mais casas decimais
         elif abs(value) < 0.01:
             return f'{value:.6f}'
         elif abs(value) < 1:
@@ -74,23 +79,26 @@ def format_metric_value(value, metric_name, context='table'):
         else:
             return f'{value:.2f}'
     elif metric_name.startswith('FDA_'):
-        # Métricas FDA (Função Distribuição Acumulada)
-        if metric_name == 'FDA_KS_PValue':
-            # P-values com mais precisão
-            if value < 0.001:
-                return f'{value:.2e}'
+        # CDF metrics (Cumulative Distribution Function)
+        if metric_name in ['ks_statistic', 'ks_pvalue', 'fda_distance']:
+            # P-values with more precision
+            if 'pvalue' in metric_name:
+                if value < 0.001:
+                    return f'{value:.2e}'
+                else:
+                    return f'{value:.4f}'
             else:
                 return f'{value:.4f}'
         elif metric_name in ['FDA_KS_Statistic', 'FDA_Distance']:
-            # Estatísticas KS e distâncias com 4-6 casas decimais
+            # Distances and divergences with scientific precision if very small
             if abs(value) < 0.001:
                 return f'{value:.2e}'
             else:
                 return f'{value:.6f}'
     elif metric_name.startswith('FDP_'):
-        # Métricas FDP (Função de Distribuição de Probabilidade)
+        # PDF metrics (Probability Density Function)
         if metric_name in ['FDP_L2_Distance', 'FDP_JS_Divergence']:
-            # Distâncias e divergências com precisão científica se muito pequenas
+            # Distances and divergences with scientific precision if very small
             if abs(value) < 1e-4:
                 return f'{value:.2e}'
             elif abs(value) < 0.01:
@@ -98,9 +106,11 @@ def format_metric_value(value, metric_name, context='table'):
             else:
                 return f'{value:.4f}'
     else:
-        # Para outras métricas
-        if abs(value) < 0.001:
+        # For very small values, use scientific notation
+        if abs(value) < 1e-6 and value != 0:
             return f'{value:.2e}'
+        elif abs(value) < 1e-3:
+            return f'{value:.6f}'
         elif abs(value) < 1:
             return f'{value:.4f}'
         else:
@@ -109,13 +119,13 @@ def format_metric_value(value, metric_name, context='table'):
 
 def validate_and_clean_metrics(results_dict):
     """
-    Valida e limpa dados de métricas para evitar problemas de formatação
+    Validate and clean metrics data to avoid formatting issues
     
     Args:
-        results_dict: Dicionário com resultados dos modelos
+        results_dict: Dictionary with model results
         
     Returns:
-        Dicionário limpo e validado
+        Cleaned and validated dictionary
     """
     cleaned_dict = {}
     
@@ -125,11 +135,11 @@ def validate_and_clean_metrics(results_dict):
         if 'metrics' in results:
             cleaned_metrics = {}
             for metric_name, value in results['metrics'].items():
-                # Limpar valores problemáticos
+                # Clean problematic values
                 if pd.isna(value) or value is None:
                     cleaned_value = np.nan
                 elif np.isinf(value):
-                    # Para infinitos, usar um valor muito grande mas finito
+                    # For infinites, use a very large but finite value
                     cleaned_value = 1e10 if value > 0 else -1e10
                 else:
                     cleaned_value = float(value)
@@ -145,10 +155,10 @@ def validate_and_clean_metrics(results_dict):
 
 def ensure_output_dir(save_path):
     """
-    Garante que o diretório de saída existe
+    Ensure that the output directory exists
     
     Args:
-        save_path: Caminho para o arquivo de saída
+        save_path: Path to the output file
     """
     if save_path:
         dir_path = os.path.dirname(save_path)
@@ -158,10 +168,10 @@ def ensure_output_dir(save_path):
 
 def get_colors_and_styles(n_items):
     """
-    Retorna cores e estilos de linha para múltiplos itens
+    Return colors and line styles for multiple items
     
     Args:
-        n_items: Número de itens que precisam de cores/estilos
+        n_items: Number of items that need colors/styles
         
     Returns:
         tuple: (colors, linestyles)
@@ -169,27 +179,27 @@ def get_colors_and_styles(n_items):
     colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
     linestyles = ['-', '--', '-.', ':', '-', '--', '-.', ':']
     
-    # Repetir se necessário
+    # Repeat if necessary
     colors = (colors * ((n_items // len(colors)) + 1))[:n_items]
     linestyles = (linestyles * ((n_items // len(linestyles)) + 1))[:n_items]
     
     return colors, linestyles
 
 
-def add_metrics_text_box(ax, metrics_dict, title="Métricas", 
+def add_metrics_text_box(ax, metrics_dict, title="Metrics", 
                         position=(0.02, 0.98), box_color='lightblue',
                         fontsize=9, family='monospace'):
     """
-    Adiciona uma caixa de texto com métricas ao gráfico
+    Add a text box with metrics to the plot
     
     Args:
-        ax: Eixo do matplotlib
-        metrics_dict: Dicionário com métricas
-        title: Título da caixa
-        position: Posição da caixa (x, y) em coordenadas relativas
-        box_color: Cor de fundo da caixa
-        fontsize: Tamanho da fonte
-        family: Família da fonte
+        ax: Matplotlib axis
+        metrics_dict: Dictionary with metrics
+        title: Box title
+        position: Box position (x, y) in relative coordinates
+        box_color: Box background color
+        fontsize: Font size
+        family: Font family
     """
     text_lines = [f"{title}:"]
     for key, value in metrics_dict.items():
@@ -205,70 +215,69 @@ def add_metrics_text_box(ax, metrics_dict, title="Métricas",
             verticalalignment='top', fontsize=fontsize, fontfamily=family)
 
 
-def print_save_message(save_path, description="Gráfico"):
+def print_save_message(save_path, description="Plot"):
     """
-    Imprime mensagem de confirmação de salvamento
+    Print save confirmation message
     
     Args:
-        save_path: Caminho onde foi salvo
-        description: Descrição do que foi salvo
+        save_path: Path where it was saved
+        description: Description of what was saved
     """
     if save_path:
-        print(f"{description} salvo em: {save_path}")
+        print(f"{description} saved at: {save_path}")
 
 
 def setup_emoji_font():
     """
-    Configura fonte que suporte emojis no matplotlib
+    Configure font that supports emojis in matplotlib
     
     Returns:
-        bool: True se conseguiu configurar fonte com emojis, False caso contrário
+        bool: True if successfully configured emoji font, False otherwise
     """
     system = platform.system()
     
-    # Lista de fontes que suportam emojis por sistema
+    # List of fonts that support emojis by system
     emoji_fonts = {
         'Windows': ['Segoe UI Emoji', 'Microsoft YaHei', 'Malgun Gothic'],
         'Darwin': ['Apple Color Emoji', 'Arial Unicode MS', 'Menlo'],  # macOS
         'Linux': ['Noto Color Emoji', 'Noto Emoji', 'DejaVu Sans', 'Liberation Sans']
     }
     
-    # Obter lista de fontes disponíveis
+    # Get list of available fonts
     available_fonts = [f.name for f in fm.fontManager.ttflist]
     
-    # Tentar encontrar uma fonte compatível
-    fonts_to_try = emoji_fonts.get(system, emoji_fonts['Linux'])  # Linux como fallback
+    # Try to find a compatible font
+    fonts_to_try = emoji_fonts.get(system, emoji_fonts['Linux'])  # Linux as fallback
     
     for font_name in fonts_to_try:
         if font_name in available_fonts:
             try:
-                # Configurar fonte
+                # Configure font
                 plt.rcParams['font.family'] = [font_name]
                 
-                # Testar se a fonte suporta emojis
+                # Test if font supports emojis
                 fig, ax = plt.subplots(figsize=(1, 1))
                 ax.text(0.5, 0.5, '🥇', fontsize=12, ha='center', va='center')
                 plt.close(fig)
                 
-                print(f"✅ Fonte configurada: {font_name} (suporte a emojis)")
+                print(f"✅ Font configured: {font_name} (emoji support)")
                 return True
             except Exception:
                 continue
     
-    # Se chegou aqui, não encontrou fonte compatível
-    print("⚠️ Nenhuma fonte com suporte a emojis encontrada, usando texto simples")
+    # If reached here, didn't find compatible font
     return False
 
 
 def get_medal_emoji(rank):
     """
-    Retorna emoji de medalha ou texto baseado no suporte da fonte
+    Return medal emoji or text based on font support
     
     Args:
-        rank: Posição no ranking (1, 2, 3, ...)
+        rank: Position in ranking (1, 2, 3, ...)
     
     Returns:
-        str: Emoji ou texto representando a medalha
+        str: Emoji or text representing the medal
     """
     if hasattr(get_medal_emoji, '_emoji_supported'):
         emoji_supported = get_medal_emoji._emoji_supported
@@ -286,7 +295,7 @@ def get_medal_emoji(rank):
         else:
             return f"{rank}º"
     else:
-        # Fallback para texto
+        # Fallback to text
         if rank == 1:
             return "[1º]"
         elif rank == 2:
@@ -299,14 +308,14 @@ def get_medal_emoji(rank):
 
 def get_status_emoji(status_type, emoji_supported=None):
     """
-    Retorna emoji de status ou texto baseado no suporte da fonte
+    Return status emoji or text based on font support
     
     Args:
-        status_type: Tipo de status ('good', 'warning', 'bad', 'info')
-        emoji_supported: Se None, detecta automaticamente
+        status_type: Status type ('good', 'warning', 'bad', 'info')
+        emoji_supported: If None, detects automatically
     
     Returns:
-        str: Emoji ou texto representando o status
+        str: Emoji or text representing the status
     """
     if emoji_supported is None:
         if hasattr(get_status_emoji, '_emoji_supported'):
@@ -327,7 +336,7 @@ def get_status_emoji(status_type, emoji_supported=None):
         }
         return status_map.get(status_type, '•')
     else:
-        # Fallback para texto
+        # Fallback to text
         status_map = {
             'good': '[OK]',
             'warning': '[!]',
@@ -337,4 +346,8 @@ def get_status_emoji(status_type, emoji_supported=None):
             'moderate': '[Y]',
             'poor': '[R]'
         }
-        return status_map.get(status_type, '•') 
+        return status_map.get(status_type, '•')
+
+# Configure font
+if setup_emoji_font():
+    plt.rcParams['font.family'] = ['Noto Color Emoji', 'DejaVu Sans'] 

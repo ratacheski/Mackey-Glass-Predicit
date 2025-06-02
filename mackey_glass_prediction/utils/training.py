@@ -1,46 +1,43 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import numpy as np
 import os
 from scipy import stats
 from scipy.stats import gaussian_kde
 from scipy.integrate import quad
-from sklearn.metrics import mean_pinball_loss, d2_pinball_score
+from sklearn.metrics import mean_pinball_loss, d2_pinball_score, r2_score, mean_squared_error, mean_absolute_error
+import warnings
 
 def train_epoch(model, dataloader, criterion, optimizer, device):
     """
-    Treina o modelo por uma época
+    Trains the model for one epoch
     """
     model.train()
     train_loss = 0.0
     num_batches = 0
     
-    with tqdm(total=len(dataloader), desc="Treinamento", leave=False) as pbar:
+    with tqdm(total=len(dataloader), desc="Training", leave=False) as pbar:
         for batch_idx, (data, target) in enumerate(dataloader):
             data, target = data.to(device), target.to(device)
             
-            # Zerar gradientes
             optimizer.zero_grad()
             
             # Forward pass
             output = model(data)
             
-            # Calcular loss
+            # Calculate loss
             loss = criterion(output, target)
             
             # Backward pass
             loss.backward()
-            
-            # Atualizar pesos
             optimizer.step()
             
-            # Acumular loss
             train_loss += loss.item()
             num_batches += 1
             
-            # Atualizar barra de progresso
+            # Update progress bar
             pbar.set_postfix({'Loss': f'{loss.item():.6f}'})
             pbar.update(1)
     
@@ -49,7 +46,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device):
 
 def validate_epoch(model, dataloader, criterion, device):
     """
-    Valida o modelo
+    Validates the model for one epoch
     """
     model.eval()
     val_loss = 0.0
@@ -58,25 +55,23 @@ def validate_epoch(model, dataloader, criterion, device):
     actuals = []
     
     with torch.no_grad():
-        with tqdm(total=len(dataloader), desc="Validação", leave=False) as pbar:
+        with tqdm(total=len(dataloader), desc="validation", leave=False) as pbar:
             for batch_idx, (data, target) in enumerate(dataloader):
                 data, target = data.to(device), target.to(device)
                 
                 # Forward pass
                 output = model(data)
                 
-                # Calcular loss
+                # Calculate loss
                 loss = criterion(output, target)
                 
-                # Acumular loss
                 val_loss += loss.item()
                 num_batches += 1
                 
-                # Armazenar predições e valores reais
-                predictions.extend(output.cpu().numpy())
+                # Store predictions and actuals
+                predictions.extend(output.squeeze().cpu().numpy())
                 actuals.extend(target.cpu().numpy())
                 
-                # Atualizar barra de progresso
                 pbar.set_postfix({'Loss': f'{loss.item():.6f}'})
                 pbar.update(1)
     
@@ -85,47 +80,47 @@ def validate_epoch(model, dataloader, criterion, device):
 
 def train_model(model, train_loader, val_loader, config, device):
     """
-    Treina o modelo completo
+    Train the complete model
     """
-    # Configurações de treinamento
+    # Training configurations
     epochs = config.get('epochs', 100)
     learning_rate = config.get('learning_rate', 0.001)
     weight_decay = config.get('weight_decay', 1e-5)
     patience = config.get('patience', 10)
     min_delta = config.get('min_delta', 1e-6)
     
-    # Otimizador e criterion
+    # Optimizer and criterion
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = nn.MSELoss()
     
-    # Scheduler (opcional)
+    # Scheduler (optional)
     if config.get('use_scheduler', True):
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode='min', factor=0.5, patience=patience//2
         )
     
-    # Listas para acompanhar o progresso
+    # Lists to track progress
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
     epochs_without_improvement = 0
     
-    print(f"Iniciando treinamento por {epochs} épocas...")
-    print(f"Dispositivo: {device}")
+    print(f"Starting training for {epochs} epochs...")
+    print(f"Device: {device}")
     
     for epoch in range(epochs):
-        print(f"\nÉpoca {epoch + 1}/{epochs}")
+        print(f"\nEpoch {epoch + 1}/{epochs}")
         print("-" * 50)
         
-        # Treinar
+        # Train
         train_loss = train_epoch(model, train_loader, criterion, optimizer, device)
         train_losses.append(train_loss)
         
-        # Validar
+        # Validate
         val_loss, _, _ = validate_epoch(model, val_loader, criterion, device)
         val_losses.append(val_loss)
         
-        # Atualizar scheduler
+        # Update scheduler
         if config.get('use_scheduler', True):
             scheduler.step(val_loss)
         
@@ -134,25 +129,25 @@ def train_model(model, train_loader, val_loader, config, device):
             best_val_loss = val_loss
             epochs_without_improvement = 0
             
-            # Salvar melhor modelo
+            # Save best model
             if config.get('save_best_model', True):
                 save_model(model, optimizer, epoch, train_losses, val_losses, 
                           config.get('model_save_path', 'best_model.pth'), is_best=True)
         else:
             epochs_without_improvement += 1
         
-        print(f"Loss de Treinamento: {train_loss:.6f}")
-        print(f"Loss de Validação: {val_loss:.6f}")
-        print(f"Melhor Loss de Validação: {best_val_loss:.6f}")
-        print(f"Learning Rate Atual: {optimizer.param_groups[0]['lr']:.2e}")
+        print(f"Training Loss: {train_loss:.6f}")
+        print(f"Validation Loss: {val_loss:.6f}")
+        print(f"Best Validation Loss: {best_val_loss:.6f}")
+        print(f"Current Learning Rate: {optimizer.param_groups[0]['lr']:.2e}")
         
         # Early stopping
         if epochs_without_improvement >= patience:
-            print(f"\nEarly stopping após {epoch + 1} épocas!")
-            print(f"Nenhuma melhoria por {patience} épocas consecutivas.")
+            print(f"\nEarly stopping after {epoch + 1} epochs!")
+            print(f"No improvement for {patience} consecutive epochs.")
             break
     
-    # Salvar modelo final
+    # Save final model
     if config.get('save_final_model', True):
         save_model(model, optimizer, epoch, train_losses, val_losses,
                   config.get('final_model_save_path', 'final_model.pth'), is_best=False)
@@ -167,7 +162,7 @@ def train_model(model, train_loader, val_loader, config, device):
 
 def save_model(model, optimizer, epoch, train_losses, val_losses, path, is_best=False):
     """
-    Salva o modelo e informações de treinamento
+    Save model and training information
     """
     os.makedirs(os.path.dirname(path) if os.path.dirname(path) else '.', exist_ok=True)
     
@@ -183,14 +178,14 @@ def save_model(model, optimizer, epoch, train_losses, val_losses, path, is_best=
     torch.save(checkpoint, path)
     
     if is_best:
-        print(f"✓ Melhor modelo salvo em: {path}")
+        print(f"✓ Best model saved at: {path}")
     else:
-        print(f"✓ Modelo final salvo em: {path}")
+        print(f"✓ Final model saved at: {path}")
 
 
 def load_model(model, optimizer, path, device):
     """
-    Carrega modelo e otimizador salvos
+    Load saved model and optimizer
     """
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -206,11 +201,11 @@ def load_model(model, optimizer, path, device):
 
 def calculate_metrics(predictions, actuals):
     """
-    Calcula métricas de avaliação
+    Calculate evaluation metrics
     """
-    # Garantir que são arrays numpy
-    predictions = np.array(predictions).flatten()
+    # Ensure they are numpy arrays
     actuals = np.array(actuals).flatten()
+    predictions = np.array(predictions).flatten()
     
     # MSE (Mean Squared Error)
     mse = np.mean((predictions - actuals) ** 2)
@@ -241,69 +236,72 @@ def calculate_metrics(predictions, actuals):
     ss_tot = np.sum((actuals - np.mean(actuals)) ** 2)
     r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
     
-    # === MÉTRICAS PINBALL LOSS ===
+    # === PINBALL LOSS METRICS ===
     try:
-        # Mean Pinball Loss (para alpha=0.5, que corresponde à mediana)
+        # Mean Pinball Loss (for alpha=0.5, which corresponds to the median)
         mean_pinball = mean_pinball_loss(actuals, predictions, alpha=0.5)
         
-        # D2 Pinball Score (coeficiente de determinação baseado em pinball loss)
+        # D2 Pinball Score (coefficient of determination based on pinball loss)
         d2_pinball = d2_pinball_score(actuals, predictions, alpha=0.5)
         
     except Exception as e:
-        print(f"Aviso: Erro ao calcular métricas pinball loss: {e}")
+        print(f"Warning: Error calculating pinball loss metrics: {e}")
         mean_pinball = float('inf')
         d2_pinball = -float('inf')
     
-    # === NOVAS MÉTRICAS: FDA e FDP ===
+    # === NEW METRICS: CDF and PDF ===
     
-    # 1. FDA (Função Distribuição Acumulada) - usando teste Kolmogorov-Smirnov
+    # 1. CDF (Cumulative Distribution Function) - using Kolmogorov-Smirnov test
     ks_statistic, ks_pvalue = stats.ks_2samp(predictions, actuals)
     
-    # Calcular FDA empírica para pontos comuns
+    # Calculate empirical CDF for common points
     combined_range = np.linspace(
         min(np.min(predictions), np.min(actuals)),
         max(np.max(predictions), np.max(actuals)),
         100
     )
     
-    # CDFs empíricas
+    # Empirical CDFs
     cdf_predictions = np.array([np.mean(predictions <= x) for x in combined_range])
     cdf_actuals = np.array([np.mean(actuals <= x) for x in combined_range])
     
-    # Distância média entre as CDFs
+    # Average distance between CDFs
     fda_distance = np.mean(np.abs(cdf_predictions - cdf_actuals))
     
-    # 2. FDP (Função de Distribuição de Probabilidade) - usando KDE
+    # 2. PDF (Probability Density Function) - using KDE
     try:
-        # Kernel Density Estimation para ambas as distribuições
+        # Kernel Density Estimation for both distributions
         kde_predictions = gaussian_kde(predictions)
         kde_actuals = gaussian_kde(actuals)
         
-        # Avaliar PDFs nos pontos do range combinado
+        # Evaluate PDFs at combined range points
         pdf_predictions = kde_predictions(combined_range)
         pdf_actuals = kde_actuals(combined_range)
         
-        # Distância entre PDFs (usando distância L2)
-        fdp_l2_distance = np.sqrt(np.trapz((pdf_predictions - pdf_actuals)**2, combined_range))
+        # Distance between PDFs (using L2 distance)
+        fdp_distance = np.sqrt(np.trapz((pdf_predictions - pdf_actuals)**2, combined_range))
         
-        # Divergência Jensen-Shannon entre as PDFs
-        # Normalizar PDFs para que sejam probabilidades válidas
+        # Jensen-Shannon divergence between PDFs
+        # Normalize PDFs to be valid probabilities
         pdf_pred_norm = pdf_predictions / np.trapz(pdf_predictions, combined_range)
         pdf_actual_norm = pdf_actuals / np.trapz(pdf_actuals, combined_range)
         
-        # PDF média para JS divergence
+        # Average PDF for JS divergence
         pdf_mean = 0.5 * (pdf_pred_norm + pdf_actual_norm)
         
-        # Calcular divergência KL com proteção contra log(0)
+        # Calculate KL divergence with protection against log(0)
         epsilon = 1e-10
         kl_pred_mean = np.trapz(pdf_pred_norm * np.log((pdf_pred_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
         kl_actual_mean = np.trapz(pdf_actual_norm * np.log((pdf_actual_norm + epsilon) / (pdf_mean + epsilon)), combined_range)
         
+        kl_divergence = kl_pred_mean + kl_actual_mean
+        
         js_divergence = 0.5 * (kl_pred_mean + kl_actual_mean)
         
     except Exception as e:
-        print(f"Aviso: Erro ao calcular métricas FDP: {e}")
-        fdp_l2_distance = float('inf')
+        print(f"Warning: Error calculating PDF metrics: {e}")
+        fdp_distance = float('inf')
+        kl_divergence = float('inf')
         js_divergence = float('inf')
     
     return {
@@ -312,17 +310,18 @@ def calculate_metrics(predictions, actuals):
         'MAE': mae,
         'MAPE': mape,
         'R²': r2,
-        # Métricas Pinball Loss
+        # PINBALL LOSS METRICS
         'MEAN_PINBALL_LOSS': mean_pinball,
         'D2_PINBALL_SCORE': d2_pinball,
-        # Métricas FDA
+        # CDF Metrics
         'FDA_KS_Statistic': ks_statistic,
         'FDA_KS_PValue': ks_pvalue,
         'FDA_Distance': fda_distance,
-        # Métricas FDP
-        'FDP_L2_Distance': fdp_l2_distance,
+        # PDF Metrics
+        'FDP_L2_Distance': fdp_distance,
+        'KL_Divergence': kl_divergence,
         'FDP_JS_Divergence': js_divergence,
-        # Métricas EQMN
+        # EQMN Metrics
         'EQMN1': eqmn1,
         'EQMN2': eqmn2
     } 
