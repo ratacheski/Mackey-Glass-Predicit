@@ -1,0 +1,35 @@
+/* Estilos adicionais para GitHub Pages */
+.github-badge {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    z-index: 1000;
+    border-bottom-left-radius: 5px;
+}
+
+.github-badge:hover {
+    background: #555;
+    color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn {
+        display: block;
+        margin: 10px 0;
+        text-align: center;
+    }
+}

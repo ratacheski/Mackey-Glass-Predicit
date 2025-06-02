@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trabalho 2 RNP - Predição Mackey-Glass</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+        }
+        .btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-success {
+            background: #27ae60;
+            font-size: 1.1em;
+        }
+        .btn-success:hover {
+            background: #229954;
+        }
+        .author-info {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .author-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .author-info p {
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Trabalho 2 - Redes Neurais Profundas</h1>
+        <h2 style="text-align: center; color: #7f8c8d; margin-bottom: 30px;">Predição de Séries Temporais Mackey-Glass</h2>
+        
+        <div class="card">
+            <h3>📊 Sobre o Projeto</h3>
+            <p>Este projeto implementa e compara <span class="highlight">três tipos de redes neurais</span> (MLP, LSTM, GRU) para predição da série temporal Mackey-Glass, com múltiplas configurações e variações para análise abrangente.</p>
+            
+            <div class="results-grid">
+                <div class="metric-card">
+                    <h4>🏆 Melhor Modelo</h4>
+                    <div class="metric-value">LSTM Bidirectional</div>
+                    <p>R² = 0.990789</p>
+                </div>
+                <div class="metric-card">
+                    <h4>🔬 Modelos Avaliados</h4>
+                    <div class="metric-value">7</div>
+                    <p>Configurações Otimizadas</p>
+                </div>
+                <div class="metric-card">
+                    <h4>📈 Dataset</h4>
+                    <div class="metric-value">998</div>
+                    <p>Pontos de Validação</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🌐 Relatório Interativo</h3>
+            <p>Acesse o relatório completo com <strong>visualizações interativas</strong>, métricas detalhadas (EQMN1, EQMN2, R², RMSE, MAE, MAPE) e análises estatísticas dos experimentos realizados.</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="relatorio.html" class="btn btn-success">📊 Ver Relatório Interativo Completo</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📚 Documentação</h3>
+            <p>Explore a documentação completa do projeto:</p>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/README.md" class="btn">📖 README</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/COMO_USAR.md" class="btn">🚀 Como Usar</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/RESULTADOS_FINAIS.md" class="btn">📈 Resultados</a>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit/blob/master/RESUMO_EXECUTIVO.md" class="btn">📊 Resumo</a>
+        </div>
+
+        <div class="card">
+            <h3>📁 Código Fonte</h3>
+            <p>Acesse o código completo e reproduzível no GitHub:</p>
+            <a href="https://github.com/ratacheski/Mackey-Glass-Predicit" class="btn">💻 Repositório GitHub</a>
+        </div>
+
+        <div class="author-info">
+            <h3>👨‍🎓 Autor</h3>
+            <p><strong>Rafael Ratacheski de Sousa Raulino</strong></p>
+            <p>Mestrando em Engenharia Elétrica e de Computação - UFG</p>
+            <p>Disciplina: Redes Neurais Profundas - 2025/1</p>
+            <p>Data: Junho de 2025</p>
+        </div>
+
+        <div class="footer">
+            <p>🌐 Hospedado no GitHub Pages | 🔬 Experimentos realizados com PyTorch</p>
+        </div>
+    </div>
+</body>
+</html>

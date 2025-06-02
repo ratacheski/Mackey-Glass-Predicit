@@ -214,8 +214,8 @@ Este documento apresenta os **resultados finais** dos experimentos de predição
 
 ### Estrutura de Resultados
 ```
-results/final_report_1748824486/
-├── relatorio_textual_20250601_213446.txt      # Relatório detalhado
+results/final_report/
+├── relatorio_textual.txt                      # Relatório detalhado
 ├── 99_tabela_metricas_20250601_213446.csv     # Métricas em CSV
 ├── 01_visao_geral_20250601_213446.png         # Comparação visual
 ├── 99_tabela_metricas_20250601_213446.png     # Tabela formatada

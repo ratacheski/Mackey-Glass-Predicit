@@ -1,3 +1,25 @@
+# 🧠 Trabalho 2 - Redes Neurais Profundas
+**Predição de Séries Temporais Mackey-Glass com Arquiteturas MLP, LSTM e GRU**
+
+---
+
+## 📋 Navegação
+
+- [📖 README](README.md) ← **Você está aqui**
+- [🚀 Como Usar](COMO_USAR.md)
+- [📊 Resumo Executivo](RESUMO_EXECUTIVO.md)
+- [📈 Resultados Finais](RESULTADOS_FINAIS.md)
+
+## 🌐 Demo Online
+
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-brightgreen?style=for-the-badge&logo=github)](https://ratacheski.github.io/Mackey-Glass-Predicit/)
+
+🔴 **Acesse o relatório interativo online**: [Clique aqui para ver o demo](https://ratacheski.github.io/Mackey-Glass-Predicit/relatorio.html)
+
+## 🎯 Objetivo
+
+Este projeto implementa e compara **três arquiteturas de redes neurais** (MLP, LSTM, GRU) para predição da série temporal Mackey-Glass, explorando diferentes configurações e técnicas avançadas para análise abrangente de desempenho.
+
 # Predição de Séries Temporais Mackey-Glass com Redes Neurais
 
 Este projeto implementa três tipos de redes neurais (MLP, LSTM, GRU) para predição de séries temporais de Mackey-Glass usando PyTorch, com múltiplas configurações e variações para cada modelo.

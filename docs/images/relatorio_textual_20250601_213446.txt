@@ -1,0 +1,289 @@
+================================================================================
+RELATÓRIO DETALHADO DE ANÁLISE DE MODELOS
+================================================================================
+Gerado em: 01/06/2025 às 21:35:24
+Tipo de análise: Comparação de múltiplos modelos
+Número de modelos analisados: 7
+
+RESUMO EXECUTIVO
+--------------------------------------------------
+
+🏆 RANKING GERAL DOS MODELOS:
+
+🥇 lstm_bidirectional
+    Score total: 5.5639
+    R²: 0.990789
+    RMSE: 0.036060
+    MAE: 0.026156
+    MAPE: 4.98%
+
+🥈 gru_bidirectional
+    Score total: 5.0892
+    R²: 0.984880
+    RMSE: 0.046200
+    MAE: 0.035896
+    MAPE: 7.06%
+
+🥉 gru_large
+    Score total: 5.0521
+    R²: 0.984210
+    RMSE: 0.047213
+    MAE: 0.036454
+    MAPE: 8.66%
+
+4º lstm_large
+    Score total: 5.0431
+    R²: 0.983583
+    RMSE: 0.048141
+    MAE: 0.035985
+    MAPE: 6.56%
+
+5º gru_attention
+    Score total: 4.9242
+    R²: 0.982544
+    RMSE: 0.049641
+    MAE: 0.039312
+    MAPE: 8.25%
+
+6º lstm_attention
+    Score total: 4.8223
+    R²: 0.980030
+    RMSE: 0.053096
+    MAE: 0.040231
+    MAPE: 7.29%
+
+7º mlp_large
+    Score total: 2.7983
+    R²: 0.932776
+    RMSE: 0.097416
+    MAE: 0.078291
+    MAPE: 26.59%
+
+🎯 ANÁLISE DO MELHOR MODELO (lstm_bidirectional):
+   ✅ Performance EXCEPCIONAL (R² > 0.95)
+   ✅ Resíduos bem centrados (sem viés)
+   ✅ Resíduos aproximadamente simétricos
+
+ANÁLISE DETALHADA POR MODELO
+--------------------------------------------------
+
+📊 MODELO: mlp_large
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.932776
+   RMSE (Raiz do Erro Quadrático Médio): 0.097416
+   MAE (Erro Absoluto Médio): 0.078291
+   MAPE (Erro Percentual Absoluto Médio): 26.59%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual alto (≥ 20%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: 0.019991
+   Desvio padrão: 0.095343
+   Assimetria: 0.3306
+   Curtose: -0.6659
+   Teste Shapiro-Wilk: 0.9778 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ⚠️ Possível viés nos resíduos
+   ✅ Distribuição aproximadamente simétrica
+   ✅ Curtose normal
+
+────────────────────────────────────────
+
+📊 MODELO: lstm_large
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.983583
+   RMSE (Raiz do Erro Quadrático Médio): 0.048141
+   MAE (Erro Absoluto Médio): 0.035985
+   MAPE (Erro Percentual Absoluto Médio): 6.56%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual baixo (< 10%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: -0.010529
+   Desvio padrão: 0.046976
+   Assimetria: 0.8926
+   Curtose: 2.8434
+   Teste Shapiro-Wilk: 0.9546 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ⚠️ Possível viés nos resíduos
+   ⚠️ Assimetria leve
+   ❌ Curtose excessiva
+
+────────────────────────────────────────
+
+📊 MODELO: lstm_bidirectional
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.990789
+   RMSE (Raiz do Erro Quadrático Médio): 0.036060
+   MAE (Erro Absoluto Médio): 0.026156
+   MAPE (Erro Percentual Absoluto Médio): 4.98%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual muito baixo (< 5%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: -0.001468
+   Desvio padrão: 0.036030
+   Assimetria: -0.3012
+   Curtose: 2.5610
+   Teste Shapiro-Wilk: 0.9554 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ✅ Sem viés significativo
+   ✅ Distribuição aproximadamente simétrica
+   ❌ Curtose excessiva
+
+────────────────────────────────────────
+
+📊 MODELO: lstm_attention
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.980030
+   RMSE (Raiz do Erro Quadrático Médio): 0.053096
+   MAE (Erro Absoluto Médio): 0.040231
+   MAPE (Erro Percentual Absoluto Médio): 7.29%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual baixo (< 10%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: 0.004483
+   Desvio padrão: 0.052906
+   Assimetria: 0.2763
+   Curtose: 0.8941
+   Teste Shapiro-Wilk: 0.9888 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ✅ Sem viés significativo
+   ✅ Distribuição aproximadamente simétrica
+   ✅ Curtose normal
+
+────────────────────────────────────────
+
+📊 MODELO: gru_large
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.984210
+   RMSE (Raiz do Erro Quadrático Médio): 0.047213
+   MAE (Erro Absoluto Médio): 0.036454
+   MAPE (Erro Percentual Absoluto Médio): 8.66%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual baixo (< 10%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: -0.000899
+   Desvio padrão: 0.047204
+   Assimetria: -0.2148
+   Curtose: 1.7711
+   Teste Shapiro-Wilk: 0.9730 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ✅ Sem viés significativo
+   ✅ Distribuição aproximadamente simétrica
+   ⚠️ Curtose moderada
+
+────────────────────────────────────────
+
+📊 MODELO: gru_bidirectional
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.984880
+   RMSE (Raiz do Erro Quadrático Médio): 0.046200
+   MAE (Erro Absoluto Médio): 0.035896
+   MAPE (Erro Percentual Absoluto Médio): 7.06%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual baixo (< 10%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: 0.003865
+   Desvio padrão: 0.046038
+   Assimetria: -0.2492
+   Curtose: 1.7491
+   Teste Shapiro-Wilk: 0.9668 (p-valor: 0.0000)
+   ⚠️ Resíduos não seguem distribuição normal (p ≤ 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ✅ Sem viés significativo
+   ✅ Distribuição aproximadamente simétrica
+   ⚠️ Curtose moderada
+
+────────────────────────────────────────
+
+📊 MODELO: gru_attention
+========================================
+Tamanho da amostra: 998 pontos
+
+🎯 MÉTRICAS DE PERFORMANCE:
+   R² (Coeficiente de Determinação): 0.982544
+   RMSE (Raiz do Erro Quadrático Médio): 0.049641
+   MAE (Erro Absoluto Médio): 0.039312
+   MAPE (Erro Percentual Absoluto Médio): 8.25%
+
+📈 INTERPRETAÇÃO:
+   • Excelente capacidade preditiva
+   • Erro percentual baixo (< 10%)
+
+🔬 ANÁLISE DE RESÍDUOS:
+   Média: 0.002493
+   Desvio padrão: 0.049578
+   Assimetria: -0.0889
+   Curtose: 0.1504
+   Teste Shapiro-Wilk: 0.9976 (p-valor: 0.1443)
+   ✅ Resíduos seguem distribuição normal (p > 0.05)
+
+🩺 DIAGNÓSTICO DOS RESÍDUOS:
+   ✅ Sem viés significativo
+   ✅ Distribuição aproximadamente simétrica
+   ✅ Curtose normal
+
+────────────────────────────────────────
+
+RECOMENDAÇÕES E CONCLUSÕES
+--------------------------------------------------
+
+🎯 MODELO RECOMENDADO: lstm_bidirectional
+
+💡 JUSTIFICATIVAS:
+   • Alto R² (0.9908) indica boa capacidade preditiva
+   • Menor RMSE entre todos os modelos
+   • Resíduos bem centrados (sem viés)
+
+🚀 PRÓXIMOS PASSOS:
+   • Verificar premissas do modelo
+   • Considerar modelos não-paramétricos
+
+================================================================================
+FIM DO RELATÓRIO
+================================================================================

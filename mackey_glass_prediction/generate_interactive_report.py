@@ -135,7 +135,7 @@ def main():
     
     # Gerar relatório HTML interativo
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    html_path = os.path.join(output_dir, f"relatorio_interativo_{timestamp}.html")
+    html_path = os.path.join(output_dir, f"relatorio.html")
     
     print(f"\n🌐 Gerando relatório HTML...")
     

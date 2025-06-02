@@ -160,7 +160,7 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
     
     # ========== RELATÓRIO TEXTUAL ==========
     print("\n📄 Gerando relatório textual...")
-    text_report_path = os.path.join(output_dir, f"relatorio_textual_{timestamp}.txt")
+    text_report_path = os.path.join(output_dir, f"relatorio_textual.txt")
     try:
         generate_text_report(single_model_results, text_report_path, report_type)
         generated_files['text_report'] = text_report_path
@@ -169,7 +169,7 @@ def generate_comprehensive_report(results_dict, output_dir, model_name=None):
     
     # ========== RELATÓRIO HTML INTERATIVO ==========
     print("\n🌐 Gerando relatório HTML interativo...")
-    interactive_html_path = os.path.join(output_dir, f"relatorio_interativo_{timestamp}.html")
+    interactive_html_path = os.path.join(output_dir, f"relatorio.html")
     try:
         generate_interactive_html_report(single_model_results, generated_files, interactive_html_path, report_type)
         generated_files['interactive_html_report'] = interactive_html_path
